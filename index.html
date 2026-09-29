@@ -4,70 +4,115 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- Ficheiro de Aplicação para Ecrã Inteiro -->
+  <!-- Configuração de Web App / Ecrã Inteiro -->
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
 
   <title>Painel ZenPad</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
       background-color: #000000;
       color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 30px;
+      padding: 25px;
       user-select: none;
-      cursor: pointer;
+      overflow: hidden;
     }
     
-    /* Relógio */
-    .clock-container { text-align: center; margin-top: 10px; }
-    .time { font-size: 6rem; font-weight: 200; letter-spacing: -2px; }
-    .date { font-size: 1.5rem; color: #8e8e93; text-transform: capitalize; margin-top: 5px; }
+    /* Relógio Principal */
+    .clock-container {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .time {
+      font-size: 6rem;
+      font-weight: 200;
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+    .date {
+      font-size: 1.4rem;
+      color: #8e8e93;
+      text-transform: capitalize;
+      margin-top: 8px;
+    }
 
-    /* Seção de Clima e Autocarros */
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 10px; }
-    .card { background: #1c1c1e; padding: 20px; border-radius: 16px; }
-    .card-title { font-size: 1rem; color: #8e8e93; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    /* Grelha de Informação Secundária */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
+    .card {
+      background: #1c1c1e;
+      padding: 20px;
+      border-radius: 16px;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      color: #8e8e93;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
 
     /* Clima */
-    .weather-temp { font-size: 2.2rem; font-weight: 300; }
-    .weather-desc { color: #aeaeb2; font-size: 0.95rem; margin-top: 4px; }
+    .weather-temp {
+      font-size: 2rem;
+      font-weight: 300;
+    }
+    .weather-desc {
+      color: #aeaeb2;
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
 
     /* Autocarros */
-    .bus-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.1rem; }
-    .bus-line { font-weight: 600; color: #0a84ff; }
-    .bus-time { color: #30d158; font-weight: 500; }
-    
-    .fullscreen-hint {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 0.75rem;
-      color: #48484a;
+    .bus-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+    .bus-item:last-child {
+      margin-bottom: 0;
+    }
+    .bus-line {
+      font-weight: 600;
+      color: #0a84ff;
+    }
+    .bus-time {
+      color: #30d158;
+      font-weight: 500;
     }
   </style>
 </head>
 <body>
 
-  <div class="fullscreen-hint">Toque para Ecrã Inteiro</div>
-
-  <!-- Relógio Principal -->
+  <!-- Relógio e Data -->
   <div class="clock-container">
     <div class="time" id="time">00:00</div>
     <div class="date" id="date">A carregar data...</div>
   </div>
 
-  <!-- Informação Secundária -->
+  <!-- Clima e Autocarros -->
   <div class="grid">
-    <!-- Clima -->
+    <!-- Bloco do Clima -->
     <div class="card">
       <div class="card-title">Clima</div>
       <div id="weather-today">
@@ -75,12 +120,12 @@
         <div class="weather-desc">A carregar...</div>
       </div>
       <div id="weather-tomorrow" style="margin-top: 12px; border-top: 1px solid #2c2c2e; padding-top: 8px;">
-        <div class="weather-temp" style="font-size: 1.6rem;">Amanhã: --°C</div>
+        <div class="weather-temp" style="font-size: 1.5rem;">Amanhã: --°C</div>
         <div class="weather-desc">A carregar...</div>
       </div>
     </div>
 
-    <!-- Paragens de Autocarro -->
+    <!-- Bloco dos Autocarros -->
     <div class="card">
       <div class="card-title">Próximos Autocarros</div>
       <div id="bus-arrivals">
@@ -97,7 +142,7 @@
   </div>
 
   <script>
-    // Atualizar Relógio
+    // Atualizar Relógio e Data
     function updateClock() {
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
@@ -107,21 +152,9 @@
       const options = { weekday: 'long', day: 'numeric', month: 'long' };
       document.getElementById('date').textContent = now.toLocaleDateString('pt-PT', options);
     }
+    
     setInterval(updateClock, 1000);
     updateClock();
-
-    // Ativar Ecrã Inteiro ao Tocar
-    document.body.addEventListener('click', function() {
-      const docEl = document.documentElement;
-      const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
-      if (requestFullScreen) {
-        requestFullScreen.call(docEl);
-      }
-    });
-  </script>
-</body>
-</html>
-    // Nota: Aqui podes integrar a tua chave da OpenWeatherMap e API de transportes locais
   </script>
 </body>
 </html>
