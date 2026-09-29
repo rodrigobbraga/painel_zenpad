@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#000000">
+
+  <title>Painel ZenPad - Porto</title>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      height: 100vh;
+      width: 100vw;
+      padding: 14px;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      position: relative;
+    }
+
+    .header-bar {
+      display: -webkit-flex;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 38px;
+      margin-bottom: 12px;
+    }
+
+    .status-pill {
+      font-size: 0.8rem;
+      color: #8e8e93;
+      background: #1c1c1e;
+      padding: 5px 12px;
+      border-radius: 12px;
+      border: 1px solid #2c2c2e;
+      letter-spacing: 0.3px;
+    }
+
+    .controls {
+      display: -webkit-flex;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      background: #1c1c1e;
+      color: #0a84ff;
+      border: 1px solid #2c2c2e;
+      border-radius: 10px;
+      padding: 7px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: -webkit-flex;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .btn:active {
+      background: #2c2c2e;
+      color: #ffffff;
+    }
+
+    .main-container {
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: row;
+      gap: 14px;
+      height: calc(100vh - 64px);
+      width: 100%;
+    }
+
+    /* Coluna Esquerda: Relógio + Clima */
+    .left-column {
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1.1;
+      -webkit-flex: 1.1;
+      min-width: 0;
+      height: 100%;
+    }
+
+    .card {
+      background: #1c1c1e;
+      border: 1px solid #2c2c2e;
+      border-radius: 18px;
+      padding: 18px;
+      width: 100%;
+    }
+
+    .clock-card {
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 22px 12px;
+      background: linear-gradient(180deg, #1c1c1e 0%, #121214 100%);
+    }
+
+    .time {
+      font-size: 5.5rem;
+      font-weight: 200;
+      letter-spacing: -2px;
+      line-height: 0.95;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .date {
+      font-size: 1.2rem;
+      color: #8e8e93;
+      margin-top: 12px;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    .weather-card {
+      flex: 1;
+      -webkit-flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      color: #8e8e93;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: -webkit-flex;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .weather-section {
+      display: -webkit-flex;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+
+    .weather-info {
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .weather-label {
+      font-size: 0.8rem;
+      color: #0a84ff;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .weather-temp {
+      font-size: 3.15rem;
+      font-weight: 300;
+      line-height: 1.1;
+      margin-top: 2px;
+    }
+
+    .weather-desc {
+      color: #8e8e93;
+      font-size: 0.85rem;
+      margin-top: 3px;
+    }
+
+    .weather-icon {
+      width: 46px;
+      height: 46px;
+    }
+
+    .divider {
+      height: 1px;
+      background: #2c2c2e;
+      margin: 8px 0;
+    }
+
+    .right-column {
+      flex: 1.25;
+      -webkit-flex: 1.25;
+      min-width: 0;
+      height: 100%;
+    }
+
+    .stcp-card {
+      height: 100%;
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      overflow: hidden;
+    }
+
+    .bus-stop-block {
+      background: #121214;
+      border: 1px solid #2c2c2e;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 10px;
+      flex: 1;
+      -webkit-flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .bus-stop-header {
+      display: -webkit-flex;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #ff9f0a;
+      font-weight: 700;
+      font-size: 1rem;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2c2c2e;
+      margin-bottom: 8px;
+    }
+
+    .bus-stop-meta {
+      font-size: 0.78rem;
+      font-weight: normal;
+      color: #8e8e93;
+    }
+
+    .bus-list {
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      flex: 1;
+      -webkit-flex: 1;
+      justify-content: flex-start;
+      min-height: 0;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #3a3a3c transparent;
+    }
+
+    /* Layout deliberadamente compatível com navegadores antigos do ZenBook/tablet.
+       Não usar CSS Grid aqui: as três zonas são células de tabela para garantir
+       que a coluna dos minutos nunca desapareça em browsers antigos. */
+    .bus-row {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      background: #1c1c1e;
+      padding: 0;
+      border-radius: 10px;
+      border: 1px solid #2c2c2e;
+      min-height: 54px;
+      box-sizing: border-box;
+      margin-bottom: 7px;
+    }
+
+    .bus-line-badge {
+      display: table-cell;
+      width: 58px;
+      vertical-align: middle;
+      background: #ff9f0a;
+      color: #000000;
+      font-weight: 800;
+      padding: 8px 5px;
+      border-radius: 7px;
+      font-size: 1.35rem;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      box-sizing: border-box;
+    }
+
+    .bus-dest-wrap {
+      display: table-cell;
+      width: auto;
+      vertical-align: middle;
+      padding: 7px 8px;
+      overflow: hidden;
+    }
+
+    .bus-dest {
+      font-size: 0.9rem;
+      color: #e5e5ea;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: none;
+    }
+
+    .bus-direction {
+      color: #8e8e93;
+      font-size: 0.68rem;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      letter-spacing: 0.35px;
+    }
+
+    .bus-arrival {
+      display: table-cell;
+      width: 92px;
+      vertical-align: middle;
+      text-align: right;
+      white-space: nowrap;
+      padding: 7px 8px 7px 3px;
+      box-sizing: border-box;
+      overflow: visible;
+    }
+
+    .bus-time-text {
+      display: block;
+      color: #30d158;
+      font-weight: 700;
+      font-size: 1.75rem;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .bus-clock-time {
+      color: #6f737b;
+      font-size: 0.68rem;
+      margin-top: 2px;
+    }
+
+    .bus-live-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #30d158;
+      margin-right: 5px;
+      vertical-align: 1px;
+    }
+
+    .bus-delay {
+      color: #ff9f0a;
+      font-size: 0.68rem;
+      margin-top: 2px;
+    }
+
+    .status-msg {
+      color: #8e8e93;
+      font-size: 0.88rem;
+      text-align: center;
+      padding: 12px 0;
+      font-style: italic;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-height: 70px;
+    }
+
+    .bus-stop-footer {
+      border-top: 1px solid #2c2c2e;
+      margin-top: 8px;
+      padding-top: 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bus-source {
+      color: #8e8e93;
+      font-size: 0.67rem;
+    }
+
+    .bus-source strong {
+      color: #30d158;
+      font-weight: 700;
+    }
+
+    .bus-official-link {
+      color: #0a84ff;
+      text-decoration: none;
+      font-size: 0.68rem;
+      font-weight: 650;
+    }
+
+    .bus-official-link:active {
+      color: #ffffff;
+    }
+
+    @media (max-width: 700px) {
+      .bus-line-badge { width: 53px; font-size: 1.2rem; }
+      .bus-arrival { width: 82px; padding-right: 7px; }
+      .bus-dest-wrap { padding-left: 6px; padding-right: 5px; }
+      .bus-time-text { font-size: 1.5rem; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="header-bar">
+    <div class="status-pill" id="last-update">A iniciar...</div>
+    <div class="controls">
+      <button class="btn" onclick="toggleFullscreen()">🖥️ Ecrã Inteiro</button>
+      <button class="btn" onclick="refreshAllData()">🔄 Atualizar</button>
+    </div>
+  </div>
+
+  <div class="main-container">
+    
+    <!-- Coluna Esquerda: Relógio + Clima -->
+    <div class="left-column">
+      
+      <!-- Relógio Principal -->
+      <div class="card clock-card">
+        <div class="time" id="time">00:00</div>
+        <div class="date" id="date">A carregar data...</div>
+      </div>
+
+      <!-- Clima Porto -->
+      <div class="card weather-card">
+        <div class="card-title">
+          <span>Clima (Porto)</span>
+          <span style="font-size: 0.7rem; color: #30d158;">Open-Meteo</span>
+        </div>
+
+        <!-- Tempo Hoje -->
+        <div class="weather-section">
+          <div class="weather-info">
+            <span class="weather-label">Hoje</span>
+            <span class="weather-temp" id="today-temp">--°C</span>
+            <span class="weather-desc" id="today-desc">A carregar...</span>
+          </div>
+          <div id="today-icon-container">
+            <svg class="weather-icon" viewBox="0 0 24 24"><path fill="#ff9f0a" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/></svg>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Previsão Amanhã -->
+        <div class="weather-section">
+          <div class="weather-info">
+            <span class="weather-label" style="color: #8e8e93;">Amanhã</span>
+            <span class="weather-temp" id="tomorrow-temp" style="font-size: 2.5rem;">--°C</span>
+            <span class="weather-desc" id="tomorrow-desc">A carregar...</span>
+          </div>
+          <div id="tomorrow-icon-container">
+            <svg class="weather-icon" viewBox="0 0 24 24"><path fill="#aeaeb2" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Coluna Direita: Autocarros STCP em tempo real -->
+    <div class="right-column">
+      <div class="card stcp-card">
+        <div class="card-title">
+          <span>Próximos Autocarros</span>
+          <span style="color: #ff9f0a;">STCP • Tempo Real</span>
+        </div>
+
+        <!-- FLUN2 -->
+        <div class="bus-stop-block">
+          <div class="bus-stop-header">
+            <span>FLUN2</span>
+            <span class="bus-stop-meta">Fluvial (Norte)</span>
+          </div>
+
+          <div class="bus-list" id="stop-flun2-list">
+            <div class="status-msg">A consultar horários...</div>
+          </div>
+
+          <div class="bus-stop-footer">
+            <span class="bus-source" id="stop-flun2-status">STCP <strong>●</strong> a aguardar dados</span>
+            <a class="bus-official-link"
+               href="https://stcp.pt/pt/paragem?stop=FLUN2"
+               target="_blank" rel="noopener">Abrir STCP ↗</a>
+          </div>
+        </div>
+
+        <!-- FLU1 -->
+        <div class="bus-stop-block">
+          <div class="bus-stop-header">
+            <span>FLU1</span>
+            <span class="bus-stop-meta">Fluvial (Sul)</span>
+          </div>
+
+          <div class="bus-list" id="stop-flu1-list">
+            <div class="status-msg">A consultar horários...</div>
+          </div>
+
+          <div class="bus-stop-footer">
+            <span class="bus-source" id="stop-flu1-status">STCP <strong>●</strong> a aguardar dados</span>
+            <a class="bus-official-link"
+               href="https://stcp.pt/pt/paragem?stop=FLU1"
+               target="_blank" rel="noopener">Abrir STCP ↗</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleFullscreen() {
+      var elem = document.documentElement;
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    }
+
+    function updateClock() {
+      var now = new Date();
+      var hours = ('0' + now.getHours()).slice(-2);
+      var minutes = ('0' + now.getMinutes()).slice(-2);
+      var timeStr = hours + ':' + minutes;
+
+      document.getElementById('time').innerHTML = timeStr;
+
+      var options = { weekday: 'long', day: 'numeric', month: 'long' };
+      var dateStr = now.toLocaleDateString('pt-PT', options);
+
+      dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+      document.getElementById('date').innerHTML = dateStr;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function getWeatherInfo(code) {
+      var sunIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#ff9f0a" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm0-13c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1s-1-.45-1-1V3c0-.55.45-1 1-1zm0 18c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1s-1-.45-1-1v-2c0-.55.45-1 1-1z"/></svg>';
+      var cloudIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#aeaeb2" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>';
+      var rainIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#0a84ff" d="M12 2c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2s-2-.9-2-2V4c0-1.1.9-2 2-2zm-6 8c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2v-6c0-1.1.9-2 2-2zm12 0c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2v-6c0-1.1.9 2 2-2z"/></svg>';
+      var stormIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#ffd60a" d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>';
+
+      if (code === 0) return ["Céu Limpo", sunIcon];
+      if (code === 1 || code === 2) return ["Parcialmente Nublado", cloudIcon];
+      if (code === 3) return ["Nublado", cloudIcon];
+      if (code >= 45 && code <= 48) return ["Nevoeiro", cloudIcon];
+      if (code >= 51 && code <= 67) return ["Chuva / Chuvisco", rainIcon];
+      if (code >= 80 && code <= 82) return ["Aguaceiros", rainIcon];
+      if (code >= 95) return ["Trovoada", stormIcon];
+
+      return ["Variável", cloudIcon];
+    }
+
+    function fetchWeather() {
+      /*
+        Mantemos Open-Meteo, mas agora usamos também a previsão horária.
+        Isto permite detetar chuva/aguaceiros mesmo quando o weather_code
+        diário/current não mostra chuva no momento exato da atualização.
+      */
+      var url = "https://api.open-meteo.com/v1/forecast?latitude=41.1579&longitude=-8.6291" +
+        "&current=temperature_2m,weather_code,precipitation,rain,showers" +
+        "&hourly=temperature_2m,precipitation_probability,precipitation,rain,showers,weather_code" +
+        "&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,precipitation_hours" +
+        "&forecast_days=2&timezone=Europe%2FLisbon";
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+          try {
+            var data = JSON.parse(xhr.responseText);
+
+            var currentTemp = Math.round(data.current.temperature_2m);
+            var todayMax = Math.round(data.daily.temperature_2m_max[0]);
+            var todayMin = Math.round(data.daily.temperature_2m_min[0]);
+            var todayCode = data.current.weather_code;
+            var todayInfo = getWeatherInfo(todayCode);
+
+            /* Encontra a hora local atual e procura chuva nas próximas horas. */
+            var now = new Date();
+            var currentHour = now.getHours();
+            var hourlyTimes = data.hourly.time || [];
+            var hourlyProb = data.hourly.precipitation_probability || [];
+            var hourlyPrecip = data.hourly.precipitation || [];
+            var hourlyRain = data.hourly.rain || [];
+            var hourlyShowers = data.hourly.showers || [];
+
+            var rainSoonProb = 0;
+            var rainSoonHour = -1;
+            var i;
+
+            for (i = 0; i < hourlyTimes.length; i++) {
+              var hourText = String(hourlyTimes[i]);
+              var hourMatch = hourText.match(/T(\d{2}):/);
+              var h = hourMatch ? Number(hourMatch[1]) : -1;
+              if (h < currentHour) continue;
+
+              var p = Number(hourlyProb[i] || 0);
+              var amount = Number(hourlyPrecip[i] || 0) + Number(hourlyRain[i] || 0) + Number(hourlyShowers[i] || 0);
+
+              if (p > rainSoonProb) {
+                rainSoonProb = p;
+                rainSoonHour = h;
+              }
+
+              /* Consideramos chuva relevante quando há precipitação prevista
+                 ou uma probabilidade >= 50% nas próximas 6 horas. */
+              if (i < 6 && (amount > 0 || p >= 50)) {
+                if (rainSoonHour === -1 || p >= rainSoonProb) {
+                  rainSoonProb = p;
+                  rainSoonHour = h;
+                }
+              }
+            }
+
+            var todayRainMax = Math.round(Number(data.daily.precipitation_probability_max[0] || 0));
+            var todayRainText = todayRainMax > 0 ? "Chuva " + todayRainMax + "%" : "Sem chuva prevista";
+
+            /* Se houver chuva significativa nas próximas horas, damos essa
+               informação prioridade no texto, em vez de mostrar apenas
+               "Nublado". */
+            if (rainSoonHour >= 0 && rainSoonProb >= 50) {
+              todayRainText = "Chuva " + Math.round(rainSoonProb) + "%";
+            }
+
+            document.getElementById('today-temp').innerHTML = currentTemp + "°C";
+            document.getElementById('today-desc').innerHTML = todayInfo[0] + " · " + todayRainText + " (" + todayMin + "° / " + todayMax + ")";
+            document.getElementById('today-icon-container').innerHTML = todayInfo[1];
+
+            var tomorrowMax = Math.round(data.daily.temperature_2m_max[1]);
+            var tomorrowMin = Math.round(data.daily.temperature_2m_min[1]);
+            var tomorrowCode = data.daily.weather_code[1];
+            var tomorrowInfo = getWeatherInfo(tomorrowCode);
+            var tomorrowRainMax = Math.round(Number(data.daily.precipitation_probability_max[1] || 0));
+            var tomorrowRainText = tomorrowRainMax > 0 ? "Chuva " + tomorrowRainMax + "%" : "Sem chuva prevista";
+
+            document.getElementById('tomorrow-temp').innerHTML = tomorrowMin + "° / " + tomorrowMax + "°C";
+            document.getElementById('tomorrow-desc').innerHTML = tomorrowInfo[0] + " · " + tomorrowRainText;
+            document.getElementById('tomorrow-icon-container').innerHTML = tomorrowInfo[1];
+
+          } catch(e) {
+            document.getElementById('today-desc').innerHTML = "Erro nos dados";
+          }
+        }
+      };
+      xhr.send();
+    }
+
+    /*
+      ==========================================================
+      AUTOCARROS STCP — TEMPO REAL
+      ==========================================================
+
+      Fonte:
+        https://stcp.pt/api/stops/{STOP_ID}/realtime
+
+      O endpoint devolve os próximos movimentos da paragem e campos
+      como trip_id, trip_headsign, estimated_arrival_time,
+      arrival_minutes, delay_minutes e last_updated.
+
+      O projecto Travel Porto usa este endpoint STCP no seu backend
+      para alimentar a sua própria API.
+
+      No GitHub Pages a chamada direta a stcp.pt é bloqueada pelo CORS.
+      Por isso esta versão usa o proxy público:
+        https://stcp-proxy.onrender.com/?stop=FLU1
+        https://stcp-proxy.onrender.com/?stop=FLUN2
+
+      O projeto do proxy publica Access-Control-Allow-Origin: *.
+      Se mais tarde preferires ter controlo total, podes substituir
+      BUS_PROXY_URL pelo teu próprio proxy.
+    */
+
+    var BUS_PROXY_URL = "https://stcp-proxy.onrender.com";
+    var BUS_REFRESH_MS = 60000;
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value).replace(/[&<>"']/g, function(ch) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        })[ch];
+      });
+    }
+
+    function formatArrivalTime(value) {
+      if (!value) return "";
+      var raw = String(value).trim();
+
+      var hm = raw.match(/(\d{1,2}):(\d{2})/);
+      if (hm) {
+        return ('0' + Number(hm[1])).slice(-2) + ':' + hm[2];
+      }
+
+      var d = new Date(value);
+      if (isNaN(d.getTime())) return "";
+      return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    }
+
+    function minutesLabel(minutes, fallbackTime) {
+      if (minutes !== null && minutes !== undefined) {
+        var raw = String(minutes).trim();
+
+        if (/^(agora|now|a passar|chegou)$/i.test(raw)) {
+          return "Agora";
+        }
+
+        // Handles: 4, "4", "4 min", "4 minutos", "4min"
+        var numeric = Number(raw);
+        if (!isNaN(numeric)) {
+          if (numeric <= 0) return "Agora";
+          return Math.max(1, Math.round(numeric)) + " min";
+        }
+
+        var match = raw.match(/-?\d+(?:[.,]\d+)?/);
+        if (match) {
+          var parsed = Number(match[0].replace(",", "."));
+          if (!isNaN(parsed)) {
+            if (parsed <= 0) return "Agora";
+            return Math.max(1, Math.round(parsed)) + " min";
+          }
+        }
+      }
+
+      // If the API gives an arrival clock time but no minutes field,
+      // calculate the countdown locally.
+      if (fallbackTime) {
+        var target = new Date(fallbackTime);
+        if (!isNaN(target.getTime())) {
+          var diff = Math.round((target.getTime() - Date.now()) / 60000);
+          if (diff <= 0) return "Agora";
+          return diff + " min";
+        }
+
+        // Also support HH:MM.
+        var hm = String(fallbackTime).match(/(\d{1,2}):(\d{2})/);
+        if (hm) {
+          var now = new Date();
+          var target2 = new Date(now);
+          target2.setHours(Number(hm[1]), Number(hm[2]), 0, 0);
+          var diff2 = Math.round((target2.getTime() - now.getTime()) / 60000);
+          if (diff2 < -1) target2.setDate(target2.getDate() + 1);
+          diff2 = Math.round((target2.getTime() - now.getTime()) / 60000);
+          if (diff2 <= 0) return "Agora";
+          return diff2 + " min";
+        }
+      }
+
+      return "--";
+    }
+
+    function buildBusUrl(stopCode) {
+      // Public proxy: GET /?stop={id}
+      // The extra timestamp prevents an older browser from reusing a cached response.
+      return BUS_PROXY_URL.replace(/\/+$/, "") + "/?stop=" + encodeURIComponent(stopCode) + "&v=" + Date.now();
+    }
+
+    function firstBusField(bus, names) {
+      var i;
+      for (i = 0; i < names.length; i++) {
+        var value = bus[names[i]];
+        if (value !== null && value !== undefined && String(value).trim() !== "") {
+          return value;
+        }
+      }
+      return null;
+    }
+
+    function extractBusMinutes(bus) {
+      // STCP/proxy versions have used several names for the waiting time.
+      var value = firstBusField(bus, [
+        'arrival_minutes', 'minutes', 'in_minutes',
+        'waiting_minutes', 'wait_minutes', 'eta_minutes',
+        'estimated_minutes', 'arrivalMinutes', 'waitingMinutes',
+        'waitMinutes', 'etaMinutes', 'minutesUntilArrival',
+        'time_to_arrival', 'timeToArrival', 'waiting_time',
+        'waitingTime', 'wait_time', 'waitTime'
+      ]);
+
+      if (value !== null) return value;
+
+      // Some responses nest the ETA inside an object.
+      var nested = firstBusField(bus, ['eta', 'arrival', 'prediction', 'estimate']);
+      if (nested && typeof nested === 'object') {
+        return firstBusField(nested, [
+          'minutes', 'arrival_minutes', 'waiting_minutes', 'wait_minutes',
+          'eta_minutes', 'waitingTime', 'waiting_time', 'timeToArrival'
+        ]);
+      }
+
+      return null;
+    }
+
+    function extractBusArrivalTime(bus) {
+      return firstBusField(bus, [
+        'estimated_arrival_time', 'arrival_time',
+        'estimatedArrivalTime', 'arrivalTime', 'estimatedTimeOfArrival',
+        'estimated_time_of_arrival', 'expected_arrival', 'expectedArrival',
+        'eta_time', 'etaTime', 'time', 'arrival'
+      ]);
+    }
+
+    function renderBusStatus(stopCode, text) {
+      var id = stopCode.toLowerCase();
+      var el = document.getElementById('stop-' + id + '-status');
+      if (el) {
+        el.innerHTML = 'STCP <strong>●</strong> ' + escapeHtml(text);
+      }
+    }
+
+    function renderBusRows(stopCode, data) {
+      var id = stopCode.toLowerCase();
+      var list = document.getElementById('stop-' + id + '-list');
+
+      var arrivals = [];
+
+      if (Array.isArray(data)) {
+        arrivals = data.slice();
+      } else if (Array.isArray(data && data.arrivals)) {
+        arrivals = data.arrivals.slice();
+      } else if (data && data.data && Array.isArray(data.data.arrivals)) {
+        arrivals = data.data.arrivals.slice();
+      } else if (data && data.data && Array.isArray(data.data)) {
+        arrivals = data.data.slice();
+      }
+
+      arrivals.sort(function(a, b) {
+        var am = Number(extractBusMinutes(a));
+        var bm = Number(extractBusMinutes(b));
+        if (isNaN(am)) am = 999999;
+        if (isNaN(bm)) bm = 999999;
+        return am - bm;
+      });
+
+      arrivals = arrivals.slice(0, 6);
+
+      if (!arrivals.length) {
+        list.innerHTML = '<div class="status-msg">Sem chegadas em tempo real de momento.<br>A STCP pode não ter veículos próximos.</div>';
+        renderBusStatus(stopCode, 'sem chegadas agora');
+        return;
+      }
+
+      var rows = '';
+
+      arrivals.forEach(function(bus) {
+        var rawRoute = bus.route_short_name || bus.route_id || bus.line || (bus.trip_id ? String(bus.trip_id).split('_')[0] : '—');
+        var route = String(rawRoute || '—');
+        var destination = bus.trip_headsign || bus.destination || bus.headsign || 'Destino não indicado';
+        var mins = extractBusMinutes(bus);
+        var rawArrivalTime = extractBusArrivalTime(bus);
+        var clockTime = formatArrivalTime(rawArrivalTime);
+
+        var delay = Number(bus.delay_minutes);
+        var delayHtml = '';
+
+        if (!isNaN(delay) && Math.abs(delay) >= 1) {
+          var sign = delay > 0 ? '+' : '−';
+          delayHtml = '<div class="bus-delay">' + sign + Math.abs(Math.round(delay)) + ' min</div>';
+        }
+
+        rows +=
+          '<div class="bus-row">' +
+            '<div class="bus-line-badge">' + escapeHtml(route) + '</div>' +
+            '<div class="bus-dest-wrap">' +
+              '<div class="bus-dest">' + escapeHtml(destination) + '</div>' +
+              '<div class="bus-direction">' +
+                'STCP' +
+                (clockTime ? ' · ' + escapeHtml(clockTime) : ' · tempo real') +
+              '</div>' +
+            '</div>' +
+            '<div class="bus-arrival" style="display:table-cell !important;visibility:visible !important;opacity:1 !important;">' +
+              '<div class="bus-time-text" style="display:block !important;visibility:visible !important;opacity:1 !important;"><span class="bus-live-dot"></span>' +
+                escapeHtml(minutesLabel(mins, rawArrivalTime)) +
+              '</div>' +
+              delayHtml +
+            '</div>' +
+          '</div>';
+      });
+
+      list.innerHTML = rows;
+
+      var last = data && data.last_updated ? new Date(data.last_updated) : null;
+      var stamp = (last && !isNaN(last.getTime()))
+        ? ('atualizado ' + ('0' + last.getHours()).slice(-2) + ':' + ('0' + last.getMinutes()).slice(-2))
+        : 'tempo real ativo';
+
+      renderBusStatus(stopCode, stamp);
+    }
+
+    function fetchBusStopData(stopCode) {
+      var list = document.getElementById('stop-' + stopCode.toLowerCase() + '-list');
+      renderBusStatus(stopCode, 'a consultar…');
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", buildBusUrl(stopCode), true);
+      xhr.timeout = 12000;
+
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+          try {
+            var data = JSON.parse(xhr.responseText);
+            renderBusRows(stopCode, data);
+          } catch (e) {
+            list.innerHTML = '<div class="status-msg">Resposta inválida da fonte de transportes.</div>';
+            renderBusStatus(stopCode, 'resposta inválida');
+          }
+        } else {
+          list.innerHTML = '<div class="status-msg">Não foi possível consultar esta paragem.</div>';
+          renderBusStatus(stopCode, 'erro ' + xhr.status);
+        }
+      };
+
+      xhr.onerror = function() {
+        list.innerHTML =
+          '<div class="status-msg">Erro de ligação.<br>' +
+          (BUS_PROXY_URL
+            ? 'O proxy não respondeu.'
+            : 'O navegador pode estar a bloquear CORS.') +
+          '</div>';
+        renderBusStatus(stopCode, 'ligação indisponível');
+      };
+
+      xhr.ontimeout = function() {
+        list.innerHTML = '<div class="status-msg">Tempo limite excedido ao consultar a paragem.</div>';
+        renderBusStatus(stopCode, 'tempo limite');
+      };
+
+      xhr.send();
+    }
+
+    function refreshAllData() {
+      var now = new Date();
+      var timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
+      document.getElementById('last-update').innerHTML = 'Atualizado às ' + timeStr;
+
+      fetchWeather();
+      fetchBusStopData('FLUN2');
+      fetchBusStopData('FLU1');
+    }
+
+    refreshAllData();
+
+    // Autocarros a cada minuto; clima a cada 30 minutos.
+    setInterval(function() {
+      fetchBusStopData('FLUN2');
+      fetchBusStopData('FLU1');
+    }, BUS_REFRESH_MS);
+
+    setInterval(fetchWeather, 30 * 60 * 1000);
+  </script>
+</body>
+</html>
