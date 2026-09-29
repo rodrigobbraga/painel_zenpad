@@ -19,7 +19,7 @@
     body {
       background-color: #000000;
       color: #ffffff;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       height: 100vh;
       padding: 15px;
       user-select: none;
@@ -54,7 +54,6 @@
 
     /* Contentor Principal de 2 Colunas */
     .main-container {
-      display: -webkit-flex;
       display: flex;
       flex-direction: row;
       gap: 15px;
@@ -65,12 +64,10 @@
 
     /* Coluna Esquerda: Relógio + Clima */
     .left-column {
-      display: -webkit-flex;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       flex: 1;
-      -webkit-flex: 1;
       min-width: 0;
       height: 100%;
     }
@@ -95,7 +92,6 @@
     /* Coluna Direita: STCP */
     .right-column {
       flex: 1;
-      -webkit-flex: 1;
       min-width: 0;
       height: 100%;
     }
@@ -109,7 +105,6 @@
 
     .card-stcp {
       height: 100%;
-      display: -webkit-flex;
       display: flex;
       flex-direction: column;
     }
@@ -150,12 +145,11 @@
       padding-bottom: 4px;
     }
     .bus-row {
-      display: -webkit-flex;
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 6px 0;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
     }
     .bus-line-badge {
       background: #2c2c2e;
@@ -163,16 +157,27 @@
       font-weight: bold;
       padding: 3px 8px;
       border-radius: 6px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      min-width: 45px;
+      text-align: center;
+    }
+    .bus-dest {
+      font-size: 0.85rem;
+      color: #aeaeb2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
     }
     .bus-time-text {
       color: #30d158;
       font-weight: bold;
+      white-space: nowrap;
     }
     .status-text {
       color: #636366;
       font-size: 0.88rem;
-      padding: 4px 0;
+      padding: 6px 0;
     }
   </style>
 </head>
@@ -207,7 +212,7 @@
       </div>
     </div>
 
-    <!-- Coluna Direita: STCP Nativo (Sem Iframe) -->
+    <!-- Coluna Direita: STCP Nativo -->
     <div class="right-column">
       <div class="card card-stcp">
         <div class="card-title">STCP - Fluvial</div>
@@ -257,7 +262,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Weather
+    // Clima via Open-Meteo
     function getWeatherDescription(code) {
       var codes = {
         0: "Céu Limpo", 1: "Principalmente Limpo", 2: "Parcialmente Nublado", 3: "Nublado",
@@ -299,52 +304,110 @@
       xhr.send();
     }
 
-    // Consulta de Autocarros STCP em JSON nativo
+    // Consulta de Paragens STCP em Tempo Real
     function fetchBusStopData(stopCode, elementId) {
-      // Endpoint de consulta direta de chegadas em tempo real
-      var apiUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stcp.pt/pt/paragem?stop=' + stopCode);
-      var xhr = new XMLHttpRequest();
+      var container = document.getElementById(elementId);
+      var targetUrl = 'https://www.stcp.pt/pt/itinerario/envolvente/pt-pt/paragem/?stop=' + stopCode;
+      var primaryProxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
 
-      xhr.open("GET", apiUrl, true);
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", primaryProxy, true);
+      xhr.timeout = 8000;
+
       xhr.onload = function() {
-        var container = document.getElementById(elementId);
         if (xhr.status >= 200 && xhr.status < 400) {
           try {
             var response = JSON.parse(xhr.responseText);
             var htmlContent = response.contents || '';
-            
-            // Procura números de linhas e tempos no texto extraído
-            var busMatches = htmlContent.match(/(\d{3}[A-Z]?)\s*-\s*([\d\w\s]+?)\s*-\s*(\d+\s*min|a passar|à hora)/gi);
-            
-            if (busMatches && busMatches.length > 0) {
-              var renderHtml = '';
-              var limit = Math.min(busMatches.length, 3); // Mostra até 3 autocarros por paragem
-              
-              for (var i = 0; i < limit; i++) {
-                var parts = busMatches[i].split('-');
-                var line = parts[0] ? parts[0].trim() : 'STCP';
-                var time = parts[parts.length - 1] ? parts[parts.length - 1].trim() : '';
-
-                renderHtml += '<div class="bus-row">' +
-                                '<span class="bus-line-badge">Linha ' + line + '</span>' +
-                                '<span class="bus-time-text">' + time + '</span>' +
-                              '</div>';
-              }
-              container.innerHTML = renderHtml;
-            } else {
-              container.innerHTML = '<div class="status-text">Sem autocarros previstos nos próximos minutos</div>';
-            }
+            renderBusData(htmlContent, container);
           } catch(e) {
-            container.innerHTML = '<div class="status-text">A atualizar horários...</div>';
+            fallbackFetch(targetUrl, container);
           }
         } else {
-          container.innerHTML = '<div class="status-text">Serviço indisponível</div>';
+          fallbackFetch(targetUrl, container);
         }
       };
+
+      xhr.onerror = function() { fallbackFetch(targetUrl, container); };
+      xhr.ontimeout = function() { fallbackFetch(targetUrl, container); };
+      xhr.send();
+    }
+
+    // Proxy Secundário de Fallback
+    function fallbackFetch(targetUrl, container) {
+      var fallbackProxy = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", fallbackProxy, true);
+      xhr.timeout = 8000;
+
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+          renderBusData(xhr.responseText, container);
+        } else {
+          container.innerHTML = '<div class="status-text">Sem informação disponível</div>';
+        }
+      };
+
       xhr.onerror = function() {
-        document.getElementById(elementId).innerHTML = '<div class="status-text">Sem ligação</div>';
+        container.innerHTML = '<div class="status-text">Erro de ligação aos dados</div>';
       };
       xhr.send();
+    }
+
+    // Renderização dos Dados Extraídos do HTML da STCP
+    function renderBusData(htmlContent, container) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(htmlContent, 'text/html');
+      var busList = [];
+
+      // Procura tabelas de chegadas no HTML
+      var rows = doc.querySelectorAll('table tr');
+      rows.forEach(function(row) {
+        var cols = row.querySelectorAll('td');
+        if (cols.length >= 2) {
+          var lineText = cols[0].textContent.trim();
+          if (lineText && !lineText.toLowerCase().includes('linha')) {
+            var destText = cols.length >= 3 ? cols[1].textContent.trim() : '';
+            var timeText = cols[cols.length - 1].textContent.trim();
+            if (timeText) {
+              busList.push({ line: lineText, destination: destText, time: timeText });
+            }
+          }
+        }
+      });
+
+      // Regex Fallback caso a estrutura da tabela seja diferente no pedido
+      if (busList.length === 0) {
+        var regex = /([0-9]{3}[A-Z]?|[0-9]{1,2}[M]?)\s*[-|]\s*([^-\n]+?)\s*[-|]\s*(\d+\s*min|a passar|à hora|\d{2}:\d{2})/gi;
+        var match;
+        while ((match = regex.exec(htmlContent)) !== null) {
+          busList.push({
+            line: match[1].trim(),
+            destination: match[2].trim(),
+            time: match[3].trim()
+          });
+        }
+      }
+
+      // Constrói o HTML com os resultados
+      if (busList.length > 0) {
+        var renderHtml = '';
+        var limit = Math.min(busList.length, 3); // Apresenta até 3 autocarros
+
+        for (var i = 0; i < limit; i++) {
+          var item = busList[i];
+          renderHtml += '<div class="bus-row">' +
+                          '<div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">' +
+                            '<span class="bus-line-badge">' + item.line + '</span>' +
+                            (item.destination ? '<span class="bus-dest" title="' + item.destination + '">' + item.destination + '</span>' : '') +
+                          '</div>' +
+                          '<span class="bus-time-text">' + item.time + '</span>' +
+                        '</div>';
+        }
+        container.innerHTML = renderHtml;
+      } else {
+        container.innerHTML = '<div class="status-text">Sem autocarros previstos nos próximos minutos</div>';
+      }
     }
 
     function updateAllBuses() {
@@ -352,12 +415,12 @@
       fetchBusStopData('FLU1', 'stop-flu1-list');
     }
 
-    // Execução Inicial e Intervalos
+    // Execução Inicial e Agendamentos
     fetchWeather();
     updateAllBuses();
 
-    setInterval(fetchWeather, 30 * 60 * 1000);
-    setInterval(updateAllBuses, 35 * 1000); // Atualiza os autocarros a cada 35 segundos
+    setInterval(fetchWeather, 30 * 60 * 1000); // Clima a cada 30 min
+    setInterval(updateAllBuses, 30 * 1000);     // Autocarros a cada 30 seg
   </script>
 </body>
 </html>
