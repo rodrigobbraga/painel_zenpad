@@ -25,7 +25,7 @@
       position: relative;
     }
     
-    /* Barra Superior de Controlos */
+    /* Controlo Superior */
     .controls {
       position: absolute;
       top: 15px;
@@ -55,48 +55,88 @@
       margin-top: 25px;
     }
     .time {
-      font-size: 6rem;
+      font-size: 5.5rem;
       font-weight: 300;
       letter-spacing: -2px;
       line-height: 1;
     }
     .date {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       color: #8e8e93;
       text-transform: capitalize;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
-    /* Clima */
-    .card {
-      background: #1c1c1e;
-      padding: 22px;
-      border-radius: 16px;
+    /* Grelha Lado a Lado */
+    .grid {
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 15px;
       width: 100%;
       margin-bottom: 10px;
     }
+    .card {
+      background: #1c1c1e;
+      padding: 18px;
+      border-radius: 16px;
+      flex: 1;
+      -webkit-flex: 1;
+      min-width: 0;
+    }
     .card-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: #8e8e93;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
       font-weight: bold;
     }
+
+    /* Clima */
     .weather-temp {
-      font-size: 2.2rem;
+      font-size: 1.8rem;
       font-weight: 300;
     }
     .weather-desc {
       color: #aeaeb2;
-      font-size: 1rem;
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+
+    /* Autocarros */
+    .bus-stop-title {
+      color: #0a84ff;
+      font-weight: bold;
+      font-size: 0.95rem;
       margin-top: 4px;
+      margin-bottom: 2px;
+    }
+    .bus-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+    .bus-line {
+      font-weight: bold;
+      color: #ffffff;
+    }
+    .bus-time {
+      color: #30d158;
+      font-weight: bold;
+    }
+    .loading-text {
+      color: #636366;
+      font-size: 0.85rem;
     }
   </style>
 </head>
 <body>
 
-  <!-- Botões de Controlo no topo -->
+  <!-- Botões de Controlo -->
   <div class="controls">
     <button class="btn" onclick="toggleFullscreen()">🖥️ Ecrã Inteiro</button>
     <button class="btn" onclick="window.location.reload()">🔄 Atualizar</button>
@@ -108,35 +148,49 @@
     <div class="date" id="date">A carregar data...</div>
   </div>
 
-  <!-- Clima -->
-  <div class="card">
-    <div class="card-title">Clima (Porto)</div>
-    <div id="weather-today">
-      <div class="weather-temp" id="today-temp">Hoje: --°C</div>
-      <div class="weather-desc" id="today-desc">A carregar...</div>
+  <!-- Clima e Autocarros Lado a Lado -->
+  <div class="grid">
+    <!-- Bloco do Clima -->
+    <div class="card">
+      <div class="card-title">Clima (Porto)</div>
+      <div id="weather-today">
+        <div class="weather-temp" id="today-temp">Hoje: --°C</div>
+        <div class="weather-desc" id="today-desc">A carregar...</div>
+      </div>
+      <div id="weather-tomorrow" style="margin-top: 10px; border-top: 1px solid #2c2c2e; padding-top: 8px;">
+        <div class="weather-temp" id="tomorrow-temp" style="font-size: 1.35rem;">Amanhã: --°C</div>
+        <div class="weather-desc" id="tomorrow-desc">A carregar...</div>
+      </div>
     </div>
-    <div id="weather-tomorrow" style="margin-top: 14px; border-top: 1px solid #2c2c2e; padding-top: 10px;">
-      <div class="weather-temp" id="tomorrow-temp" style="font-size: 1.6rem;">Amanhã: --°C</div>
-      <div class="weather-desc" id="tomorrow-desc">A carregar...</div>
+
+    <!-- Bloco da STCP -->
+    <div class="card">
+      <div class="card-title">STCP - Fluvial</div>
+      
+      <div class="bus-stop-title">FLUN2</div>
+      <div id="bus-flun2">
+        <div class="loading-text">A consultar...</div>
+      </div>
+
+      <div class="bus-stop-title" style="margin-top: 8px;">FLU1</div>
+      <div id="bus-flu1">
+        <div class="loading-text">A consultar...</div>
+      </div>
     </div>
   </div>
 
   <script>
-    // Função para forçar ecrã inteiro no Navegador Asus / WebKit antigo
+    // Ecrã Inteiro
     function toggleFullscreen() {
       var elem = document.documentElement;
       if (elem.webkitRequestFullscreen) {
         elem.webkitRequestFullscreen();
       } else if (elem.requestFullscreen) {
         elem.requestFullscreen();
-      } else if (elem.mozRequestFullScreen) {
-        elem.mozRequestFullScreen();
-      } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
       }
     }
 
-    // Relógio compatível com Android antigo
+    // Relógio
     function updateClock() {
       var now = new Date();
       var hours = ('0' + now.getHours()).slice(-2);
@@ -149,7 +203,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Tradução do tempo
+    // Dicionário de Tempo
     function getWeatherDescription(code) {
       var codes = {
         0: "Céu Limpo", 1: "Principalmente Limpo", 2: "Parcialmente Nublado", 3: "Nublado",
@@ -160,7 +214,7 @@
       return codes[code] || "Variável";
     }
 
-    // Clima via HTTPS
+    // Clima via HTTPS / XHR
     function fetchWeather() {
       var url = "https://api.open-meteo.com/v1/forecast?latitude=41.1579&longitude=-8.6291&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FLisbon";
       var xhr = new XMLHttpRequest();
@@ -185,18 +239,82 @@
             document.getElementById('tomorrow-temp').innerHTML = "Amanhã: " + tomorrowMin + "° / " + tomorrowMax + "°C";
             document.getElementById('tomorrow-desc').innerHTML = getWeatherDescription(tomorrowCode);
           } catch(e) {
-            document.getElementById('today-desc').innerHTML = "Erro nos dados do clima";
+            document.getElementById('today-desc').innerHTML = "Erro no clima";
           }
         }
-      };
-      xhr.onerror = function() {
-        document.getElementById('today-desc').innerHTML = "Sem ligação à internet";
       };
       xhr.send();
     }
 
+    // Leitor do HTML do novo site da STCP
+    function parseStcpHtml(htmlText) {
+      var results = [];
+      // Procura elementos com tempos e linhas na nova estrutura da STCP
+      var matches = htmlText.match(/<tr[\s\S]*?<\/tr>/gi) || htmlText.match(/<li[\s\S]*?<\/li>/gi) || [];
+
+      for (var i = 0; i < matches.length && i < 2; i++) {
+        var row = matches[i];
+        var lineMatch = row.match(/(\d{3}[A-Z]?|\b[1-9]\b)/i);
+        var timeMatch = row.match(/(\d+\s*min|à hora|a passar)/i);
+
+        if (lineMatch && timeMatch) {
+          results.push({ line: lineMatch[1], time: timeMatch[1] });
+        }
+      }
+      return results;
+    }
+
+    // Autocarros STCP com o novo link
+    function fetchBusStops() {
+      var stops = [
+        { code: 'FLUN2', elementId: 'bus-flun2' },
+        { code: 'FLU1', elementId: 'bus-flu1' }
+      ];
+
+      stops.forEach(function(stop) {
+        var targetUrl = 'https://stcp.pt/pt/paragem?stop=' + stop.code;
+        var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+        var xhr = new XMLHttpRequest();
+
+        xhr.open("GET", proxyUrl, true);
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 400) {
+            try {
+              var response = JSON.parse(xhr.responseText);
+              var buses = parseStcpHtml(response.contents || '');
+              var container = document.getElementById(stop.elementId);
+
+              if (buses.length > 0) {
+                var html = '';
+                for (var i = 0; i < buses.length; i++) {
+                  html += '<div class="bus-item">' +
+                            '<span class="bus-line">Linha ' + buses[i].line + '</span>' +
+                            '<span class="bus-time">' + buses[i].time + '</span>' +
+                          '</div>';
+                }
+                container.innerHTML = html;
+              } else {
+                container.innerHTML = '<div class="loading-text">Sem autocarros previstos</div>';
+              }
+            } catch(e) {
+              document.getElementById(stop.elementId).innerHTML = '<div class="loading-text">Erro nos dados</div>';
+            }
+          }
+        };
+        xhr.onerror = function() {
+          document.getElementById(stop.elementId).innerHTML = '<div class="loading-text">Indisponível</div>';
+        };
+        xhr.send();
+      });
+    }
+
+    // Execução Inicial
     fetchWeather();
+    fetchBusStops();
+
+    // Timers
     setInterval(fetchWeather, 30 * 60 * 1000);
+    setInterval(fetchBusStops, 40 * 1000);
   </script>
 </body>
 </html>
