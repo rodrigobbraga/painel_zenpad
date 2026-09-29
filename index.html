@@ -263,33 +263,42 @@
       scrollbar-color: #3a3a3c transparent;
     }
 
+    /* Layout deliberadamente compatível com navegadores antigos do ZenBook/tablet.
+       Não usar CSS Grid aqui: as três zonas são células de tabela para garantir
+       que a coluna dos minutos nunca desapareça em browsers antigos. */
     .bus-row {
-      display: grid;
-      grid-template-columns: 58px minmax(0, 1fr) 92px;
-      align-items: center;
-      gap: 10px;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
       background: #1c1c1e;
-      padding: 9px 11px;
+      padding: 0;
       border-radius: 10px;
       border: 1px solid #2c2c2e;
       min-height: 54px;
+      box-sizing: border-box;
+      margin-bottom: 7px;
     }
 
     .bus-line-badge {
+      display: table-cell;
+      width: 58px;
+      vertical-align: middle;
       background: #ff9f0a;
       color: #000000;
       font-weight: 800;
-      padding: 4px 8px;
+      padding: 8px 5px;
       border-radius: 7px;
       font-size: 0.9rem;
-      min-width: 46px;
       text-align: center;
-      flex: 0 0 auto;
       font-variant-numeric: tabular-nums;
+      box-sizing: border-box;
     }
 
     .bus-dest-wrap {
-      min-width: 0;
+      display: table-cell;
+      width: auto;
+      vertical-align: middle;
+      padding: 7px 8px;
       overflow: hidden;
     }
 
@@ -314,15 +323,26 @@
     }
 
     .bus-arrival {
+      display: table-cell;
+      width: 92px;
+      vertical-align: middle;
       text-align: right;
       white-space: nowrap;
+      padding: 7px 8px 7px 3px;
+      box-sizing: border-box;
+      overflow: visible;
     }
 
     .bus-time-text {
+      display: block;
       color: #30d158;
       font-weight: 700;
       font-size: 1.08rem;
+      line-height: 1.2;
       font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      visibility: visible;
+      opacity: 1;
     }
 
     .bus-clock-time {
@@ -392,10 +412,10 @@
     }
 
     @media (max-width: 700px) {
-      .bus-row {
-        grid-template-columns: 53px minmax(0, 1fr) 78px;
-        gap: 8px;
-      }
+      .bus-line-badge { width: 53px; }
+      .bus-arrival { width: 82px; padding-right: 7px; }
+      .bus-dest-wrap { padding-left: 6px; padding-right: 5px; }
+      .bus-time-text { font-size: 1rem; }
     }
 
   </style>
@@ -705,7 +725,53 @@
 
     function buildBusUrl(stopCode) {
       // Public proxy: GET /?stop={id}
-      return BUS_PROXY_URL.replace(/\/+$/, "") + "/?stop=" + encodeURIComponent(stopCode);
+      // The extra timestamp prevents an older browser from reusing a cached response.
+      return BUS_PROXY_URL.replace(/\/+$/, "") + "/?stop=" + encodeURIComponent(stopCode) + "&v=" + Date.now();
+    }
+
+    function firstBusField(bus, names) {
+      var i;
+      for (i = 0; i < names.length; i++) {
+        var value = bus[names[i]];
+        if (value !== null && value !== undefined && String(value).trim() !== "") {
+          return value;
+        }
+      }
+      return null;
+    }
+
+    function extractBusMinutes(bus) {
+      // STCP/proxy versions have used several names for the waiting time.
+      var value = firstBusField(bus, [
+        'arrival_minutes', 'minutes', 'in_minutes',
+        'waiting_minutes', 'wait_minutes', 'eta_minutes',
+        'estimated_minutes', 'arrivalMinutes', 'waitingMinutes',
+        'waitMinutes', 'etaMinutes', 'minutesUntilArrival',
+        'time_to_arrival', 'timeToArrival', 'waiting_time',
+        'waitingTime', 'wait_time', 'waitTime'
+      ]);
+
+      if (value !== null) return value;
+
+      // Some responses nest the ETA inside an object.
+      var nested = firstBusField(bus, ['eta', 'arrival', 'prediction', 'estimate']);
+      if (nested && typeof nested === 'object') {
+        return firstBusField(nested, [
+          'minutes', 'arrival_minutes', 'waiting_minutes', 'wait_minutes',
+          'eta_minutes', 'waitingTime', 'waiting_time', 'timeToArrival'
+        ]);
+      }
+
+      return null;
+    }
+
+    function extractBusArrivalTime(bus) {
+      return firstBusField(bus, [
+        'estimated_arrival_time', 'arrival_time',
+        'estimatedArrivalTime', 'arrivalTime', 'estimatedTimeOfArrival',
+        'estimated_time_of_arrival', 'expected_arrival', 'expectedArrival',
+        'eta_time', 'etaTime', 'time', 'arrival'
+      ]);
     }
 
     function renderBusStatus(stopCode, text) {
@@ -733,8 +799,8 @@
       }
 
       arrivals.sort(function(a, b) {
-        var am = Number(a.arrival_minutes);
-        var bm = Number(b.arrival_minutes);
+        var am = Number(extractBusMinutes(a));
+        var bm = Number(extractBusMinutes(b));
         if (isNaN(am)) am = 999999;
         if (isNaN(bm)) bm = 999999;
         return am - bm;
@@ -754,15 +820,8 @@
         var rawRoute = bus.route_short_name || bus.route_id || bus.line || (bus.trip_id ? String(bus.trip_id).split('_')[0] : '—');
         var route = String(rawRoute || '—');
         var destination = bus.trip_headsign || bus.destination || bus.headsign || 'Destino não indicado';
-        var mins = bus.arrival_minutes;
-        if (mins === null || mins === undefined) mins = bus.minutes;
-        if (mins === null || mins === undefined) mins = bus.in_minutes;
-        var rawArrivalTime = bus.estimated_arrival_time ||
-          bus.arrival_time ||
-          bus.estimatedArrivalTime ||
-          bus.arrivalTime ||
-          bus.time ||
-          null;
+        var mins = extractBusMinutes(bus);
+        var rawArrivalTime = extractBusArrivalTime(bus);
         var clockTime = formatArrivalTime(rawArrivalTime);
 
         var delay = Number(bus.delay_minutes);
@@ -783,8 +842,8 @@
                 (clockTime ? ' · ' + escapeHtml(clockTime) : ' · tempo real') +
               '</div>' +
             '</div>' +
-            '<div class="bus-arrival">' +
-              '<div class="bus-time-text"><span class="bus-live-dot"></span>' +
+            '<div class="bus-arrival" style="display:table-cell !important;visibility:visible !important;opacity:1 !important;">' +
+              '<div class="bus-time-text" style="display:block !important;visibility:visible !important;opacity:1 !important;"><span class="bus-live-dot"></span>' +
                 escapeHtml(minutesLabel(mins, rawArrivalTime)) +
               '</div>' +
               delayHtml +
