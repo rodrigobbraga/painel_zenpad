@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#000000">
+
   <title>Painel ZenPad - Porto</title>
   <style>
     * {
@@ -32,6 +37,7 @@
       right: 15px;
       display: flex;
       gap: 8px;
+      z-index: 10;
     }
     .btn {
       background: #1c1c1e;
@@ -52,7 +58,7 @@
     /* Relógio */
     .clock-container {
       text-align: center;
-      margin-top: 25px;
+      margin-top: 20px;
     }
     .time {
       font-size: 5.5rem;
@@ -64,7 +70,7 @@
       font-size: 1.3rem;
       color: #8e8e93;
       text-transform: capitalize;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     /* Grelha Lado a Lado */
@@ -75,15 +81,17 @@
       justify-content: space-between;
       gap: 15px;
       width: 100%;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
     .card {
       background: #1c1c1e;
-      padding: 18px;
+      padding: 16px;
       border-radius: 16px;
       flex: 1;
       -webkit-flex: 1;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
     }
     .card-title {
       font-size: 0.9rem;
@@ -92,6 +100,9 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     /* Clima */
@@ -105,32 +116,34 @@
       margin-top: 2px;
     }
 
-    /* Autocarros */
-    .bus-stop-title {
-      color: #0a84ff;
-      font-weight: bold;
-      font-size: 0.95rem;
-      margin-top: 4px;
-      margin-bottom: 2px;
-    }
-    .bus-item {
+    /* Seletor de Paragem da STCP */
+    .stop-selector {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 1rem;
-      margin-bottom: 2px;
+      gap: 6px;
     }
-    .bus-line {
+    .stop-btn {
+      background: #2c2c2e;
+      color: #0a84ff;
+      border: 1px solid #3a3a3c;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.8rem;
       font-weight: bold;
+      cursor: pointer;
+    }
+    .stop-btn.active {
+      background: #0a84ff;
       color: #ffffff;
     }
-    .bus-time {
-      color: #30d158;
-      font-weight: bold;
-    }
-    .loading-text {
-      color: #636366;
-      font-size: 0.85rem;
+
+    /* Janela Iframe STCP */
+    .stcp-frame {
+      width: 100%;
+      height: 210px;
+      border: none;
+      border-radius: 10px;
+      background: #ffffff;
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -157,25 +170,22 @@
         <div class="weather-temp" id="today-temp">Hoje: --°C</div>
         <div class="weather-desc" id="today-desc">A carregar...</div>
       </div>
-      <div id="weather-tomorrow" style="margin-top: 10px; border-top: 1px solid #2c2c2e; padding-top: 8px;">
+      <div id="weather-tomorrow" style="margin-top: 12px; border-top: 1px solid #2c2c2e; padding-top: 8px;">
         <div class="weather-temp" id="tomorrow-temp" style="font-size: 1.35rem;">Amanhã: --°C</div>
         <div class="weather-desc" id="tomorrow-desc">A carregar...</div>
       </div>
     </div>
 
-    <!-- Bloco da STCP -->
+    <!-- Bloco da STCP com Janela Integrada -->
     <div class="card">
-      <div class="card-title">STCP - Fluvial</div>
-      
-      <div class="bus-stop-title">FLUN2</div>
-      <div id="bus-flun2">
-        <div class="loading-text">A consultar...</div>
+      <div class="card-title">
+        <span>STCP Fluvial</span>
+        <div class="stop-selector">
+          <button class="stop-btn active" id="btn-flun2" onclick="changeStop('FLUN2')">FLUN2</button>
+          <button class="stop-btn" id="btn-flu1" onclick="changeStop('FLU1')">FLU1</button>
+        </div>
       </div>
-
-      <div class="bus-stop-title" style="margin-top: 8px;">FLU1</div>
-      <div id="bus-flu1">
-        <div class="loading-text">A consultar...</div>
-      </div>
+      <iframe id="stcp-iframe" class="stcp-frame" src="https://stcp.pt/pt/paragem?stop=FLUN2"></iframe>
     </div>
   </div>
 
@@ -203,6 +213,15 @@
     setInterval(updateClock, 1000);
     updateClock();
 
+    // Trocar Paragem na Janela STCP
+    function changeStop(stopCode) {
+      var iframe = document.getElementById('stcp-iframe');
+      iframe.src = 'https://stcp.pt/pt/paragem?stop=' + stopCode;
+      
+      document.getElementById('btn-flun2').className = 'stop-btn' + (stopCode === 'FLUN2' ? ' active' : '');
+      document.getElementById('btn-flu1').className = 'stop-btn' + (stopCode === 'FLU1' ? ' active' : '');
+    }
+
     // Dicionário de Tempo
     function getWeatherDescription(code) {
       var codes = {
@@ -214,7 +233,7 @@
       return codes[code] || "Variável";
     }
 
-    // Clima via HTTPS / XHR
+    // Clima via HTTPS
     function fetchWeather() {
       var url = "https://api.open-meteo.com/v1/forecast?latitude=41.1579&longitude=-8.6291&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FLisbon";
       var xhr = new XMLHttpRequest();
@@ -246,75 +265,8 @@
       xhr.send();
     }
 
-    // Leitor do HTML do novo site da STCP
-    function parseStcpHtml(htmlText) {
-      var results = [];
-      // Procura elementos com tempos e linhas na nova estrutura da STCP
-      var matches = htmlText.match(/<tr[\s\S]*?<\/tr>/gi) || htmlText.match(/<li[\s\S]*?<\/li>/gi) || [];
-
-      for (var i = 0; i < matches.length && i < 2; i++) {
-        var row = matches[i];
-        var lineMatch = row.match(/(\d{3}[A-Z]?|\b[1-9]\b)/i);
-        var timeMatch = row.match(/(\d+\s*min|à hora|a passar)/i);
-
-        if (lineMatch && timeMatch) {
-          results.push({ line: lineMatch[1], time: timeMatch[1] });
-        }
-      }
-      return results;
-    }
-
-    // Autocarros STCP com o novo link
-    function fetchBusStops() {
-      var stops = [
-        { code: 'FLUN2', elementId: 'bus-flun2' },
-        { code: 'FLU1', elementId: 'bus-flu1' }
-      ];
-
-      stops.forEach(function(stop) {
-        var targetUrl = 'https://stcp.pt/pt/paragem?stop=' + stop.code;
-        var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
-        var xhr = new XMLHttpRequest();
-
-        xhr.open("GET", proxyUrl, true);
-        xhr.onload = function() {
-          if (xhr.status >= 200 && xhr.status < 400) {
-            try {
-              var response = JSON.parse(xhr.responseText);
-              var buses = parseStcpHtml(response.contents || '');
-              var container = document.getElementById(stop.elementId);
-
-              if (buses.length > 0) {
-                var html = '';
-                for (var i = 0; i < buses.length; i++) {
-                  html += '<div class="bus-item">' +
-                            '<span class="bus-line">Linha ' + buses[i].line + '</span>' +
-                            '<span class="bus-time">' + buses[i].time + '</span>' +
-                          '</div>';
-                }
-                container.innerHTML = html;
-              } else {
-                container.innerHTML = '<div class="loading-text">Sem autocarros previstos</div>';
-              }
-            } catch(e) {
-              document.getElementById(stop.elementId).innerHTML = '<div class="loading-text">Erro nos dados</div>';
-            }
-          }
-        };
-        xhr.onerror = function() {
-          document.getElementById(stop.elementId).innerHTML = '<div class="loading-text">Indisponível</div>';
-        };
-        xhr.send();
-      });
-    }
-
-    // Execução Inicial
     fetchWeather();
-    fetchBusStops();
-
-    // Timers
     setInterval(fetchWeather, 30 * 60 * 1000);
-    setInterval(fetchBusStops, 40 * 1000);
   </script>
 </body>
 </html>
