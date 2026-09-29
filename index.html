@@ -304,83 +304,83 @@
       xhr.send();
     }
 
-    // Consulta de Paragens STCP em Tempo Real
+    // Consulta de Paragens STCP em Tempo Real com base no HTML oficial
     function fetchBusStopData(stopCode, elementId) {
       var container = document.getElementById(elementId);
-      var targetUrl = 'https://www.stcp.pt/pt/itinerario/envolvente/pt-pt/paragem/?stop=' + stopCode;
-      var primaryProxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+      var targetUrl = 'https://www.stcp.pt/pt/paragem/?stop=' + stopCode;
+      var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
 
       var xhr = new XMLHttpRequest();
-      xhr.open("GET", primaryProxy, true);
-      xhr.timeout = 8000;
+      xhr.open("GET", proxyUrl, true);
+      xhr.timeout = 10000;
 
       xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 400) {
           try {
             var response = JSON.parse(xhr.responseText);
-            var htmlContent = response.contents || '';
-            renderBusData(htmlContent, container);
+            parseSTCPHTML(response.contents, container);
           } catch(e) {
-            fallbackFetch(targetUrl, container);
+            fallbackProxyFetch(targetUrl, container);
           }
         } else {
-          fallbackFetch(targetUrl, container);
+          fallbackProxyFetch(targetUrl, container);
         }
       };
 
-      xhr.onerror = function() { fallbackFetch(targetUrl, container); };
-      xhr.ontimeout = function() { fallbackFetch(targetUrl, container); };
+      xhr.onerror = function() { fallbackProxyFetch(targetUrl, container); };
+      xhr.ontimeout = function() { fallbackProxyFetch(targetUrl, container); };
       xhr.send();
     }
 
-    // Proxy Secundário de Fallback
-    function fallbackFetch(targetUrl, container) {
-      var fallbackProxy = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+    function fallbackProxyFetch(targetUrl, container) {
+      var fallbackUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
       var xhr = new XMLHttpRequest();
-      xhr.open("GET", fallbackProxy, true);
-      xhr.timeout = 8000;
-
+      xhr.open("GET", fallbackUrl, true);
+      
       xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 400) {
-          renderBusData(xhr.responseText, container);
+          parseSTCPHTML(xhr.responseText, container);
         } else {
-          container.innerHTML = '<div class="status-text">Sem informação disponível</div>';
+          container.innerHTML = '<div class="status-text">Sem sinal do servidor STCP</div>';
         }
       };
-
       xhr.onerror = function() {
-        container.innerHTML = '<div class="status-text">Erro de ligação aos dados</div>';
+        container.innerHTML = '<div class="status-text">Erro de ligação</div>';
       };
       xhr.send();
     }
 
-    // Renderização dos Dados Extraídos do HTML da STCP
-    function renderBusData(htmlContent, container) {
+    function parseSTCPHTML(htmlString, container) {
       var parser = new DOMParser();
-      var doc = parser.parseFromString(htmlContent, 'text/html');
+      var doc = parser.parseFromString(htmlString, 'text/html');
       var busList = [];
 
-      // Procura tabelas de chegadas no HTML
-      var rows = doc.querySelectorAll('table tr');
+      // Procura dentro do bloco cst_stop_detail ou no documento inteiro
+      var stopDetail = doc.querySelector('.cst_stop_detail') || doc.body;
+      var rows = stopDetail.querySelectorAll('table tr');
+
       rows.forEach(function(row) {
         var cols = row.querySelectorAll('td');
         if (cols.length >= 2) {
-          var lineText = cols[0].textContent.trim();
-          if (lineText && !lineText.toLowerCase().includes('linha')) {
-            var destText = cols.length >= 3 ? cols[1].textContent.trim() : '';
-            var timeText = cols[cols.length - 1].textContent.trim();
-            if (timeText) {
-              busList.push({ line: lineText, destination: destText, time: timeText });
+          var line = cols[0].textContent.trim();
+          
+          // Ignora cabeçalhos de tabelas
+          if (line && !line.toLowerCase().includes('linha') && !line.toLowerCase().includes('paragem')) {
+            var dest = cols.length >= 3 ? cols[1].textContent.trim() : '';
+            var time = cols[cols.length - 1].textContent.trim();
+            
+            if (time) {
+              busList.push({ line: line, destination: dest, time: time });
             }
           }
         }
       });
 
-      // Regex Fallback caso a estrutura da tabela seja diferente no pedido
+      // Expressão Regular de recurso caso a tabela seja diferente no pedido
       if (busList.length === 0) {
         var regex = /([0-9]{3}[A-Z]?|[0-9]{1,2}[M]?)\s*[-|]\s*([^-\n]+?)\s*[-|]\s*(\d+\s*min|a passar|à hora|\d{2}:\d{2})/gi;
         var match;
-        while ((match = regex.exec(htmlContent)) !== null) {
+        while ((match = regex.exec(htmlString)) !== null) {
           busList.push({
             line: match[1].trim(),
             destination: match[2].trim(),
@@ -389,22 +389,22 @@
         }
       }
 
-      // Constrói o HTML com os resultados
+      // Renderiza os autocarros na página
       if (busList.length > 0) {
-        var renderHtml = '';
-        var limit = Math.min(busList.length, 3); // Apresenta até 3 autocarros
+        var html = '';
+        var limit = Math.min(busList.length, 3); // Apresenta até 3 autocarros por paragem
 
         for (var i = 0; i < limit; i++) {
-          var item = busList[i];
-          renderHtml += '<div class="bus-row">' +
-                          '<div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">' +
-                            '<span class="bus-line-badge">' + item.line + '</span>' +
-                            (item.destination ? '<span class="bus-dest" title="' + item.destination + '">' + item.destination + '</span>' : '') +
-                          '</div>' +
-                          '<span class="bus-time-text">' + item.time + '</span>' +
-                        '</div>';
+          var bus = busList[i];
+          html += '<div class="bus-row">' +
+                    '<div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">' +
+                      '<span class="bus-line-badge">' + bus.line + '</span>' +
+                      (bus.destination ? '<span class="bus-dest" title="' + bus.destination + '">' + bus.destination + '</span>' : '') +
+                    '</div>' +
+                    '<span class="bus-time-text">' + bus.time + '</span>' +
+                  '</div>';
         }
-        container.innerHTML = renderHtml;
+        container.innerHTML = html;
       } else {
         container.innerHTML = '<div class="status-text">Sem autocarros previstos nos próximos minutos</div>';
       }
