@@ -4,11 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <link rel="manifest" href="manifest.json">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#000000">
-
   <title>Painel ZenPad - Porto</title>
   <style>
     * {
@@ -24,28 +19,32 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 25px;
+      padding: 20px;
       user-select: none;
       overflow: hidden;
       position: relative;
     }
     
-    /* Botão de Atualizar */
-    .refresh-btn {
+    /* Barra Superior de Controlos */
+    .controls {
       position: absolute;
       top: 15px;
       right: 15px;
+      display: flex;
+      gap: 8px;
+    }
+    .btn {
       background: #1c1c1e;
       color: #8e8e93;
       border: 1px solid #2c2c2e;
       border-radius: 8px;
-      padding: 8px 14px;
+      padding: 8px 12px;
       font-size: 0.85rem;
       cursor: pointer;
       outline: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .refresh-btn:active {
+    .btn:active {
       background: #2c2c2e;
       color: #ffffff;
     }
@@ -53,7 +52,7 @@
     /* Relógio */
     .clock-container {
       text-align: center;
-      margin-top: 15px;
+      margin-top: 25px;
     }
     .time {
       font-size: 6rem;
@@ -97,8 +96,11 @@
 </head>
 <body>
 
-  <!-- Botão de Atualizar -->
-  <button class="refresh-btn" onclick="window.location.reload();">🔄 Atualizar</button>
+  <!-- Botões de Controlo no topo -->
+  <div class="controls">
+    <button class="btn" onclick="toggleFullscreen()">🖥️ Ecrã Inteiro</button>
+    <button class="btn" onclick="window.location.reload()">🔄 Atualizar</button>
+  </div>
 
   <!-- Relógio e Data -->
   <div class="clock-container">
@@ -120,6 +122,20 @@
   </div>
 
   <script>
+    // Função para forçar ecrã inteiro no Navegador Asus / WebKit antigo
+    function toggleFullscreen() {
+      var elem = document.documentElement;
+      if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+    }
+
     // Relógio compatível com Android antigo
     function updateClock() {
       var now = new Date();
