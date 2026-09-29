@@ -216,35 +216,52 @@
       overflow: hidden;
     }
 
+    /* As duas paragens ficam lado a lado. Usa table/table-cell para manter
+       compatibilidade com o navegador antigo do ZenBook. */
+    .bus-stops-wrap {
+      display: table;
+      width: 100%;
+      height: 100%;
+      table-layout: fixed;
+      border-spacing: 10px 10px;
+      margin-left: -10px;
+      width: calc(100% + 20px);
+    }
+
     .bus-stop-block {
       background: #121214;
       border: 1px solid #2c2c2e;
       border-radius: 14px;
       padding: 14px;
-      margin-top: 10px;
-      flex: 1;
-      -webkit-flex: 1;
-      display: -webkit-flex;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
+      display: table-cell;
+      width: 50%;
+      vertical-align: top;
+      box-sizing: border-box;
+      height: 100%;
     }
 
     .bus-stop-header {
-      display: -webkit-flex;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: table;
+      width: 100%;
       color: #ff9f0a;
       font-weight: 700;
-      font-size: 1rem;
-      padding-bottom: 8px;
+      font-size: 1.15rem;
+      padding-bottom: 10px;
       border-bottom: 1px solid #2c2c2e;
       margin-bottom: 8px;
     }
 
+    .bus-stop-header > span {
+      display: table-cell;
+      vertical-align: middle;
+    }
+
+    .bus-stop-header > span:last-child {
+      text-align: right;
+    }
+
     .bus-stop-meta {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: normal;
       color: #8e8e93;
     }
@@ -281,14 +298,14 @@
 
     .bus-line-badge {
       display: table-cell;
-      width: 58px;
+      width: 78px;
       vertical-align: middle;
       background: #ff9f0a;
       color: #000000;
-      font-weight: 800;
-      padding: 8px 5px;
+      font-weight: 900;
+      padding: 7px 4px;
       border-radius: 7px;
-      font-size: 0.9rem;
+      font-size: 1.55rem;
       text-align: center;
       font-variant-numeric: tabular-nums;
       box-sizing: border-box;
@@ -303,7 +320,7 @@
     }
 
     .bus-dest {
-      font-size: 0.9rem;
+      font-size: 0.82rem;
       color: #e5e5ea;
       white-space: nowrap;
       overflow: hidden;
@@ -313,7 +330,7 @@
 
     .bus-direction {
       color: #8e8e93;
-      font-size: 0.68rem;
+      font-size: 0.62rem;
       margin-top: 2px;
       white-space: nowrap;
       overflow: hidden;
@@ -324,7 +341,7 @@
 
     .bus-arrival {
       display: table-cell;
-      width: 92px;
+      width: 118px;
       vertical-align: middle;
       text-align: right;
       white-space: nowrap;
@@ -336,8 +353,8 @@
     .bus-time-text {
       display: block;
       color: #30d158;
-      font-weight: 700;
-      font-size: 1.08rem;
+      font-weight: 900;
+      font-size: 1.55rem;
       line-height: 1.2;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
@@ -412,10 +429,11 @@
     }
 
     @media (max-width: 700px) {
-      .bus-line-badge { width: 53px; }
-      .bus-arrival { width: 82px; padding-right: 7px; }
+      .bus-line-badge { width: 64px; font-size: 1.25rem; }
+      .bus-arrival { width: 96px; padding-right: 7px; }
       .bus-dest-wrap { padding-left: 6px; padding-right: 5px; }
-      .bus-time-text { font-size: 1rem; }
+      .bus-time-text { font-size: 1.25rem; }
+      .bus-dest { font-size: 0.76rem; }
     }
 
   </style>
@@ -485,6 +503,8 @@
           <span style="color: #ff9f0a;">STCP • Tempo Real</span>
         </div>
 
+        <div class="bus-stops-wrap">
+
         <!-- Paragem FLUN2 -->
         <div class="bus-stop-block">
           <div class="bus-stop-header">
@@ -522,6 +542,8 @@
                target="_blank" rel="noopener">Abrir STCP ↗</a>
           </div>
         </div>
+
+        </div><!-- /bus-stops-wrap -->
 
       </div>
     </div>
@@ -824,13 +846,9 @@
         var rawArrivalTime = extractBusArrivalTime(bus);
         var clockTime = formatArrivalTime(rawArrivalTime);
 
-        var delay = Number(bus.delay_minutes);
+        /* O atraso (+4 min, etc.) foi removido da interface para leitura
+           à distância. O valor principal continua a ser o tempo até chegar. */
         var delayHtml = '';
-
-        if (!isNaN(delay) && Math.abs(delay) >= 1) {
-          var sign = delay > 0 ? '+' : '−';
-          delayHtml = '<div class="bus-delay">' + sign + Math.abs(Math.round(delay)) + ' min</div>';
-        }
 
         rows +=
           '<div class="bus-row">' +
@@ -838,8 +856,7 @@
             '<div class="bus-dest-wrap">' +
               '<div class="bus-dest">' + escapeHtml(destination) + '</div>' +
               '<div class="bus-direction">' +
-                'STCP' +
-                (clockTime ? ' · ' + escapeHtml(clockTime) : ' · tempo real') +
+                (clockTime ? 'previsto ' + escapeHtml(clockTime) : 'tempo real') +
               '</div>' +
             '</div>' +
             '<div class="bus-arrival" style="display:table-cell !important;visibility:visible !important;opacity:1 !important;">' +
