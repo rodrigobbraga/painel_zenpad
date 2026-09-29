@@ -358,7 +358,7 @@
       </div>
     </div>
 
-    <!-- Coluna Direita: Autocarros Travel Porto via Proxy CORS -->
+    <!-- Coluna Direita: Autocarros Travel Porto com Múltiplos Proxies -->
     <div class="right-column">
       <div class="card stcp-card">
         <div class="card-title">
@@ -512,54 +512,68 @@
 
     function fetchBusStopData(stopCode, elementId) {
       var targetUrl = 'https://www.travel-porto.pt/stop/' + stopCode;
-      // Usamos o proxy CORS leve para ultrapassar o bloqueio de origem do navegador
-      var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
       
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", proxyUrl, true);
-      xhr.timeout = 10000;
+      // Lista de proxies em rotação para evitar timeouts
+      var proxies = [
+        'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl),
+        'https://corsproxy.io/?' + encodeURIComponent(targetUrl),
+        'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl)
+      ];
 
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 400) {
-          var responseText = xhr.responseText;
-          try {
-            var json = JSON.parse(responseText);
-            if (json.contents) responseText = json.contents;
-          } catch(e) {}
-
-          var buses = parseTravelPortoHtml(responseText);
-
-          if (buses && buses.length > 0) {
-            var renderHtml = '';
-            var limit = Math.min(buses.length, 2);
-            
-            for (var i = 0; i < limit; i++) {
-              renderHtml += '<div class="bus-row">' +
-                              '<div class="bus-left">' +
-                                '<span class="bus-line-badge">' + buses[i].line + '</span>' +
-                                '<span class="bus-dest">' + buses[i].dest + '</span>' +
-                              '</div>' +
-                              '<span class="bus-time-text">' + buses[i].time + '</span>' +
-                            '</div>';
-            }
-            document.getElementById(elementId).innerHTML = renderHtml;
-          } else {
-            document.getElementById(elementId).innerHTML = '<div class="status-msg">Sem autocarros previstos</div>';
-          }
-        } else {
-          document.getElementById(elementId).innerHTML = '<div class="status-msg">Erro a consultar paragem</div>';
+      function tryProxy(index) {
+        if (index >= proxies.length) {
+          document.getElementById(elementId).innerHTML = '<div class="status-msg">Sem autocarros previstos</div>';
+          return;
         }
-      };
 
-      xhr.onerror = function() {
-        document.getElementById(elementId).innerHTML = '<div class="status-msg">Erro de ligação</div>';
-      };
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", proxies[index], true);
+        xhr.timeout = 7000; // Timeout de 7 segundos por proxy
 
-      xhr.ontimeout = function() {
-        document.getElementById(elementId).innerHTML = '<div class="status-msg">Tempo limite excedido</div>';
-      };
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 400) {
+            var responseText = xhr.responseText;
+            try {
+              var json = JSON.parse(responseText);
+              if (json.contents) responseText = json.contents;
+            } catch(e) {}
 
-      xhr.send();
+            var buses = parseTravelPortoHtml(responseText);
+
+            if (buses && buses.length > 0) {
+              var renderHtml = '';
+              var limit = Math.min(buses.length, 2);
+              
+              for (var i = 0; i < limit; i++) {
+                renderHtml += '<div class="bus-row">' +
+                                '<div class="bus-left">' +
+                                  '<span class="bus-line-badge">' + buses[i].line + '</span>' +
+                                  '<span class="bus-dest">' + buses[i].dest + '</span>' +
+                                '</div>' +
+                                '<span class="bus-time-text">' + buses[i].time + '</span>' +
+                              '</div>';
+              }
+              document.getElementById(elementId).innerHTML = renderHtml;
+            } else {
+              tryProxy(index + 1); // Tenta o próximo proxy se este falhou na leitura
+            }
+          } else {
+            tryProxy(index + 1);
+          }
+        };
+
+        xhr.onerror = function() {
+          tryProxy(index + 1);
+        };
+
+        xhr.ontimeout = function() {
+          tryProxy(index + 1); // Se demorar muito, salta logo para o próximo proxy
+        };
+
+        xhr.send();
+      }
+
+      tryProxy(0);
     }
 
     function refreshAllData() {
