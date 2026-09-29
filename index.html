@@ -446,7 +446,7 @@
       <div class="card weather-card">
         <div class="card-title">
           <span>Clima (Porto)</span>
-          <span style="font-size: 0.7rem; color: #30d158;">Open-Meteo</span>
+          <span style="font-size: 0.7rem; color: #30d158;">IPMA</span>
         </div>
 
         <!-- Tempo Hoje -->
@@ -565,33 +565,55 @@
     updateClock();
 
     function getWeatherInfo(code) {
-      var sunIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#ff9f0a" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm0-13c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1s-1-.45-1-1V3c0-.55.45-1 1-1zm0 18c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1s-1-.45-1-1v-2c0-.55.45-1 1-1z"/></svg>';
+      var sunIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#ff9f0a" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm0-13c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1s-1-.45-1-1V3c0-.55.45-1 1-1zm0 18c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1v-2c0-.55.45-1 1-1z"/></svg>';
       var cloudIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#aeaeb2" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>';
-      var rainIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#0a84ff" d="M12 2c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2s-2-.9-2-2V4c0-1.1.9-2 2-2zm-6 8c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2v-6c0-1.1.9-2 2-2zm12 0c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2v-6c0-1.1.9 2 2-2z"/></svg>';
+      var rainIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#0a84ff" d="M12 2c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2s-2-.9-2-2V4c0-1.1.9-2 2-2zm-6 8c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2v-6c0-1.1.9-2 2-2zm12 0c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2v-6c0-1.1.9-2 2-2z"/></svg>';
       var stormIcon = '<svg class="weather-icon" viewBox="0 0 24 24"><path fill="#ffd60a" d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>';
 
-      if (code === 0) return ["Céu Limpo", sunIcon];
-      if (code === 1 || code === 2) return ["Parcialmente Nublado", cloudIcon];
-      if (code === 3) return ["Nublado", cloudIcon];
-      if (code >= 45 && code <= 48) return ["Nevoeiro", cloudIcon];
-      if (code >= 51 && code <= 67) return ["Chuva / Chuvisco", rainIcon];
-      if (code >= 80 && code <= 82) return ["Aguaceiros", rainIcon];
-      if (code >= 95) return ["Trovoada", stormIcon];
+      /* Códigos oficiais IPMA (idWeatherType). */
+      if (code === 1) return ["Céu limpo", sunIcon];
+      if (code === 2) return ["Céu pouco nublado", cloudIcon];
+      if (code === 3) return ["Céu parcialmente nublado", cloudIcon];
+      if (code === 4 || code === 5 || code === 25 || code === 27) return ["Nublado", cloudIcon];
+      if (code === 16 || code === 17 || code === 26) return ["Nevoeiro / Neblina", cloudIcon];
+      if (code >= 6 && code <= 15) return ["Chuva / Aguaceiros", rainIcon];
+      if (code === 19 || code === 20 || code === 23) return ["Trovoada", stormIcon];
+      if (code === 21 || code === 28 || code === 29 || code === 30) return ["Chuva / Neve", rainIcon];
+      if (code === 18 || code === 22) return ["Neve / Geada", cloudIcon];
 
       return ["Variável", cloudIcon];
     }
 
+    function formatRainText(prob) {
+      var p = Math.round(Number(prob || 0));
+      return p > 0 ? "Chuva " + p + "%" : "Sem chuva prevista";
+    }
+
+    function findForecastByDate(items, dateText) {
+      var i;
+      for (i = 0; i < items.length; i++) {
+        if (items[i].forecastDate === dateText) return items[i];
+      }
+      return null;
+    }
+
+    function localDateKey(offsetDays) {
+      var d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      var y = d.getFullYear();
+      var m = ('0' + (d.getMonth() + 1)).slice(-2);
+      var day = ('0' + d.getDate()).slice(-2);
+      return y + '-' + m + '-' + day;
+    }
+
     function fetchWeather() {
       /*
-        Mantemos Open-Meteo, mas agora usamos também a previsão horária.
-        Isto permite detetar chuva/aguaceiros mesmo quando o weather_code
-        diário/current não mostra chuva no momento exato da atualização.
+        IPMA — previsão diária para Porto.
+        globalIdLocal 1131200 = Porto.
+        A API devolve até 5 dias com mínima, máxima,
+        probabilidade de precipitação e idWeatherType.
       */
-      var url = "https://api.open-meteo.com/v1/forecast?latitude=41.1579&longitude=-8.6291" +
-        "&current=temperature_2m,weather_code,precipitation,rain,showers" +
-        "&hourly=temperature_2m,precipitation_probability,precipitation,rain,showers,weather_code" +
-        "&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,precipitation_sum,precipitation_hours" +
-        "&forecast_days=2&timezone=Europe%2FLisbon";
+      var url = "https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/1131200.json";
 
       var xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
@@ -599,79 +621,44 @@
         if (xhr.status >= 200 && xhr.status < 400) {
           try {
             var data = JSON.parse(xhr.responseText);
+            var items = data.data || [];
 
-            var currentTemp = Math.round(data.current.temperature_2m);
-            var todayMax = Math.round(data.daily.temperature_2m_max[0]);
-            var todayMin = Math.round(data.daily.temperature_2m_min[0]);
-            var todayCode = data.current.weather_code;
-            var todayInfo = getWeatherInfo(todayCode);
+            var today = findForecastByDate(items, localDateKey(0));
+            var tomorrow = findForecastByDate(items, localDateKey(1));
 
-            /* Encontra a hora local atual e procura chuva nas próximas horas. */
-            var now = new Date();
-            var currentHour = now.getHours();
-            var hourlyTimes = data.hourly.time || [];
-            var hourlyProb = data.hourly.precipitation_probability || [];
-            var hourlyPrecip = data.hourly.precipitation || [];
-            var hourlyRain = data.hourly.rain || [];
-            var hourlyShowers = data.hourly.showers || [];
+            /* Fallback para o primeiro/segundo registo se a data local
+               não coincidir com a data publicada pela API. */
+            if (!today) today = items[0];
+            if (!tomorrow) tomorrow = items[1] || items[0];
 
-            var rainSoonProb = 0;
-            var rainSoonHour = -1;
-            var i;
+            if (!today || !tomorrow) throw new Error("Sem previsão IPMA");
 
-            for (i = 0; i < hourlyTimes.length; i++) {
-              var hourText = String(hourlyTimes[i]);
-              var hourMatch = hourText.match(/T(\d{2}):/);
-              var h = hourMatch ? Number(hourMatch[1]) : -1;
-              if (h < currentHour) continue;
+            var todayInfo = getWeatherInfo(Number(today.idWeatherType));
+            var tomorrowInfo = getWeatherInfo(Number(tomorrow.idWeatherType));
 
-              var p = Number(hourlyProb[i] || 0);
-              var amount = Number(hourlyPrecip[i] || 0) + Number(hourlyRain[i] || 0) + Number(hourlyShowers[i] || 0);
+            var todayMin = Math.round(Number(today.tMin));
+            var todayMax = Math.round(Number(today.tMax));
+            var tomorrowMin = Math.round(Number(tomorrow.tMin));
+            var tomorrowMax = Math.round(Number(tomorrow.tMax));
 
-              if (p > rainSoonProb) {
-                rainSoonProb = p;
-                rainSoonHour = h;
-              }
-
-              /* Consideramos chuva relevante quando há precipitação prevista
-                 ou uma probabilidade >= 50% nas próximas 6 horas. */
-              if (i < 6 && (amount > 0 || p >= 50)) {
-                if (rainSoonHour === -1 || p >= rainSoonProb) {
-                  rainSoonProb = p;
-                  rainSoonHour = h;
-                }
-              }
-            }
-
-            var todayRainMax = Math.round(Number(data.daily.precipitation_probability_max[0] || 0));
-            var todayRainText = todayRainMax > 0 ? "Chuva " + todayRainMax + "%" : "Sem chuva prevista";
-
-            /* Se houver chuva significativa nas próximas horas, damos essa
-               informação prioridade no texto, em vez de mostrar apenas
-               "Nublado". */
-            if (rainSoonHour >= 0 && rainSoonProb >= 50) {
-              todayRainText = "Chuva " + Math.round(rainSoonProb) + "%";
-            }
-
-            document.getElementById('today-temp').innerHTML = currentTemp + "°C";
-            document.getElementById('today-desc').innerHTML = todayInfo[0] + " · " + todayRainText + " (" + todayMin + "° / " + todayMax + ")";
+            /* Mantemos o layout: o valor grande mostra min/max do dia. */
+            document.getElementById('today-temp').innerHTML = todayMin + "° / " + todayMax + "°C";
+            document.getElementById('today-desc').innerHTML = todayInfo[0] + " · " + formatRainText(today.precipitaProb);
             document.getElementById('today-icon-container').innerHTML = todayInfo[1];
 
-            var tomorrowMax = Math.round(data.daily.temperature_2m_max[1]);
-            var tomorrowMin = Math.round(data.daily.temperature_2m_min[1]);
-            var tomorrowCode = data.daily.weather_code[1];
-            var tomorrowInfo = getWeatherInfo(tomorrowCode);
-            var tomorrowRainMax = Math.round(Number(data.daily.precipitation_probability_max[1] || 0));
-            var tomorrowRainText = tomorrowRainMax > 0 ? "Chuva " + tomorrowRainMax + "%" : "Sem chuva prevista";
-
             document.getElementById('tomorrow-temp').innerHTML = tomorrowMin + "° / " + tomorrowMax + "°C";
-            document.getElementById('tomorrow-desc').innerHTML = tomorrowInfo[0] + " · " + tomorrowRainText;
+            document.getElementById('tomorrow-desc').innerHTML = tomorrowInfo[0] + " · " + formatRainText(tomorrow.precipitaProb);
             document.getElementById('tomorrow-icon-container').innerHTML = tomorrowInfo[1];
 
           } catch(e) {
-            document.getElementById('today-desc').innerHTML = "Erro nos dados";
+            document.getElementById('today-desc').innerHTML = "Erro nos dados IPMA";
           }
+        } else {
+          document.getElementById('today-desc').innerHTML = "IPMA indisponível";
         }
+      };
+      xhr.onerror = function() {
+        document.getElementById('today-desc').innerHTML = "IPMA indisponível";
       };
       xhr.send();
     }
