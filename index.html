@@ -146,12 +146,12 @@
       
       <div class="bus-stop-title">Paragem FLUN2</div>
       <div id="bus-flun2">
-        <div class="loading-text">A consultar horários...</div>
+        <div class="loading-text">A carregar...</div>
       </div>
 
       <div class="bus-stop-title" style="margin-top: 8px;">Paragem FLU1</div>
       <div id="bus-flu1">
-        <div class="loading-text">A consultar horários...</div>
+        <div class="loading-text">A carregar...</div>
       </div>
     </div>
   </div>
@@ -170,37 +170,24 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Dicionário de Códigos de Tempo em Português
+    // Dicionário de Códigos de Tempo
     function getWeatherDescription(code) {
       const codes = {
-        0: "Céu Limpo",
-        1: "Principalmente Limpo",
-        2: "Parcialmente Nublado",
-        3: "Nublado",
-        45: "Nevoeiro",
-        48: "Nevoeiro com Geada",
-        51: "Aresta/Chuvisco Leve",
-        53: "Chuvisco Moderado",
-        55: "Chuvisco Intenso",
-        61: "Chuva Fraca",
-        63: "Chuva Moderada",
-        65: "Chuva Forte",
-        80: "Aguaceiros Fracos",
-        81: "Aguaceiros Moderados",
-        82: "Aguaceiros Fortes",
-        95: "Trovoada"
+        0: "Céu Limpo", 1: "Principalmente Limpo", 2: "Parcialmente Nublado", 3: "Nublado",
+        45: "Nevoeiro", 48: "Nevoeiro com Geada", 51: "Chuvisco Leve", 53: "Chuvisco Moderado",
+        55: "Chuvisco Intenso", 61: "Chuva Fraca", 63: "Chuva Moderada", 65: "Chuva Forte",
+        80: "Aguaceiros Fracos", 81: "Aguaceiros Moderados", 82: "Aguaceiros Fortes", 95: "Trovoada"
       };
       return codes[code] || "Variável";
     }
 
-    // 2. Clima em Tempo Real (Porto - Coordenadas: 41.1579, -8.6291)
+    // 2. Clima em Tempo Real (Porto)
     function fetchWeather() {
       const url = "https://api.open-meteo.com/v1/forecast?latitude=41.1579&longitude=-8.6291&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FLisbon";
 
       fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          // Hoje
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
           const currentTemp = Math.round(data.current_weather.temperature);
           const todayMax = Math.round(data.daily.temperature_2m_max[0]);
           const todayMin = Math.round(data.daily.temperature_2m_min[0]);
@@ -209,7 +196,6 @@
           document.getElementById('today-temp').textContent = `Hoje: ${currentTemp}°C`;
           document.getElementById('today-desc').textContent = `${getWeatherDescription(todayCode)} (${todayMin}° / ${todayMax}°)`;
 
-          // Amanhã
           const tomorrowMax = Math.round(data.daily.temperature_2m_max[1]);
           const tomorrowMin = Math.round(data.daily.temperature_2m_min[1]);
           const tomorrowCode = data.daily.weathercode[1];
@@ -217,71 +203,101 @@
           document.getElementById('tomorrow-temp').textContent = `Amanhã: ${tomorrowMin}° / ${tomorrowMax}°C`;
           document.getElementById('tomorrow-desc').textContent = getWeatherDescription(tomorrowCode);
         })
-        .catch(err => {
+        .catch(function() {
           document.getElementById('today-desc').textContent = "Erro ao carregar clima";
         });
     }
 
-    // 3. Autocarros STCP (FLUN2 e FLU1)
+    // 3. Processador de Autocarros STCP (Compatível com Android Antigo via Regex)
+    function parseStcpHtml(htmlText) {
+      var results = [];
+      // Procura todas as linhas da tabela de autocarros
+      var rowRegex = /<tr[^>]*class=["']linha-stcp["'][\s\S]*?<\/tr>/gi;
+      var matches = htmlText.match(rowRegex) || [];
+
+      for (var i = 0; i < matches.length && i < 2; i++) {
+        var row = matches[i];
+        
+        // Extrai a linha e o tempo
+        var lineMatch = row.match(/class=["']linha["'][^>]*>([\s\S]*?)<\/td>/i) || row.match(/<b>([\s\S]*?)<\/b>/i);
+        var timeMatch = row.match(/class=["']tempo["'][^>]*>([\s\S]*?)<\/td>/i) || row.match(/(\d+\s*min|à hora|a passar)/i);
+
+        if (lineMatch && timeMatch) {
+          var line = lineMatch[1].replace(/<[^>]+>/g, '').trim();
+          var time = timeMatch[1].replace(/<[^>]+>/g, '').trim();
+          if (line && time) {
+            results.push({ line: line, time: time });
+          }
+        }
+      }
+      return results;
+    }
+
     function fetchBusStops() {
-      const stops = [
+      var stops = [
         { code: 'FLUN2', elementId: 'bus-flun2' },
         { code: 'FLU1', elementId: 'bus-flu1' }
       ];
 
-      stops.forEach(stop => {
-        // Consulta o serviço da STCP via Proxy para evitar bloqueios de CORS
-        const targetUrl = `https://www.stcp.pt/itinerarios/estacao.php?p=${stop.code}`;
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+      stops.forEach(function(stop) {
+        var targetUrl = 'https://www.stcp.pt/itinerarios/estacao.php?p=' + stop.code;
+        // Usa o proxy corsproxy.io que é mais rápido e estável
+        var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
 
         fetch(proxyUrl)
-          .then(response => response.json())
-          .then(data => {
-            const container = document.getElementById(stop.elementId);
-            
-            // Procura os tempos de espera no HTML retornado
-            if (data.contents && data.contents.includes('linha-stcp')) {
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(data.contents, 'text/html');
-              const rows = doc.querySelectorAll('tr.linha-stcp');
-              
-              let html = '';
-              let count = 0;
+          .then(function(res) { return res.text(); })
+          .then(function(htmlText) {
+            var container = document.getElementById(stop.elementId);
+            var buses = parseStcpHtml(htmlText);
 
-              rows.forEach(row => {
-                if (count < 2) { // Mostra os 2 próximos autocarros
-                  const line = row.querySelector('.linha') ? row.querySelector('.linha').textContent.trim() : '';
-                  const time = row.querySelector('.tempo') ? row.querySelector('.tempo').textContent.trim() : '';
-                  
-                  if (line && time) {
-                    html += `
-                      <div class="bus-item">
-                        <span class="bus-line">${line}</span>
-                        <span class="bus-time">${time}</span>
-                      </div>`;
-                    count++;
-                  }
-                }
+            if (buses.length > 0) {
+              var html = '';
+              buses.forEach(function(b) {
+                html += '<div class="bus-item">' +
+                          '<span class="bus-line">' + b.line + '</span>' +
+                          '<span class="bus-time">' + b.time + '</span>' +
+                        '</div>';
               });
-
-              container.innerHTML = html || '<div class="loading-text">Sem autocarros previstos</div>';
+              container.innerHTML = html;
             } else {
-              container.innerHTML = '<div class="loading-text">Sem autocarros de momento</div>';
+              container.innerHTML = '<div class="loading-text">Sem autocarros previstos</div>';
             }
           })
-          .catch(() => {
-            document.getElementById(stop.elementId).innerHTML = '<div class="loading-text">A atualizar...</div>';
+          .catch(function() {
+            // Se o primeiro proxy falhar, tenta o proxy alternativo
+            var fallbackProxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
+            fetch(fallbackProxy)
+              .then(function(res) { return res.json(); })
+              .then(function(data) {
+                var container = document.getElementById(stop.elementId);
+                var buses = parseStcpHtml(data.contents || '');
+                if (buses.length > 0) {
+                  var html = '';
+                  buses.forEach(function(b) {
+                    html += '<div class="bus-item">' +
+                              '<span class="bus-line">' + b.line + '</span>' +
+                              '<span class="bus-time">' + b.time + '</span>' +
+                            '</div>';
+                  });
+                  container.innerHTML = html;
+                } else {
+                  container.innerHTML = '<div class="loading-text">Sem autocarros previstos</div>';
+                }
+              })
+              .catch(function() {
+                document.getElementById(stop.elementId).innerHTML = '<div class="loading-text">Indisponível de momento</div>';
+              });
           });
       });
     }
 
-    // Atualização Inicial e Periódica
+    // Execução Inicial
     fetchWeather();
     fetchBusStops();
 
-    // Atualiza o clima a cada 30 minutos e os autocarros a cada 40 segundos
-    setInterval(fetchWeather, 30 * 60 * 1000);
-    setInterval(fetchBusStops, 40 * 1000);
+    // Atualização automática
+    setInterval(fetchWeather, 30 * 60 * 1000); // Clima de 30 em 30 min
+    setInterval(fetchBusStops, 30 * 1000);     // Autocarros de 30 em 30 seg
   </script>
 </body>
 </html>
