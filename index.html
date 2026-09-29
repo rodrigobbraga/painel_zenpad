@@ -68,6 +68,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      transition: background 0.2s ease, color 0.2s ease;
     }
 
     .btn:active {
@@ -90,8 +91,8 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      flex: 0.9;
-      -webkit-flex: 0.9;
+      flex: 1.1;
+      -webkit-flex: 1.1;
       min-width: 0;
       height: 100%;
     }
@@ -199,61 +200,120 @@
       margin: 8px 0;
     }
 
-    /* Coluna Direita: Iframes do Travel Porto Lado a Lado */
     .right-column {
-      flex: 1.5;
-      -webkit-flex: 1.5;
+      flex: 1.25;
+      -webkit-flex: 1.25;
       min-width: 0;
       height: 100%;
-      display: -webkit-flex;
-      display: flex;
-      flex-direction: row; /* Alterado para alinhar horizontalmente */
-      gap: 14px;
     }
 
-    .iframe-container {
-      flex: 1;
-      -webkit-flex: 1;
-      background: #1c1c1e;
-      border: 1px solid #2c2c2e;
-      border-radius: 18px;
-      padding: 12px;
+    .stcp-card {
+      height: 100%;
       display: -webkit-flex;
       display: flex;
       flex-direction: column;
+      justify-content: flex-start;
       overflow: hidden;
-      height: 100%;
     }
 
-    .iframe-header {
-      font-size: 0.85rem;
-      color: #ff9f0a;
-      font-weight: 700;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .bus-stop-block {
+      background: #121214;
+      border: 1px solid #2c2c2e;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 10px;
+      flex: 1;
+      -webkit-flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bus-stop-header {
       display: -webkit-flex;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      color: #ff9f0a;
+      font-weight: 700;
+      font-size: 1rem;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2c2c2e;
+      margin-bottom: 8px;
     }
 
-    .travel-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
+    .bus-list {
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      -webkit-flex: 1;
+      justify-content: center;
+    }
+
+    .bus-row {
+      display: -webkit-flex;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1c1c1e;
+      padding: 10px 12px;
       border-radius: 10px;
-      background: #ffffff;
+      border: 1px solid #2c2c2e;
+    }
+
+    .bus-left {
+      display: -webkit-flex;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .bus-line-badge {
+      background: #ff9f0a;
+      color: #000000;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 7px;
+      font-size: 0.95rem;
+      min-width: 48px;
+      text-align: center;
+    }
+
+    .bus-dest {
+      font-size: 0.9rem;
+      color: #e5e5ea;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+
+    .bus-time-text {
+      color: #30d158;
+      font-weight: 700;
+      font-size: 1.05rem;
+      white-space: nowrap;
+    }
+
+    .status-msg {
+      color: #8e8e93;
+      font-size: 0.88rem;
+      text-align: center;
+      padding: 12px 0;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
 
   <div class="header-bar">
-    <div class="status-pill" id="last-update">Painel Ativo</div>
+    <div class="status-pill" id="last-update">A iniciar...</div>
     <div class="controls">
       <button class="btn" onclick="toggleFullscreen()">🖥️ Ecrã Inteiro</button>
-      <button class="btn" onclick="refreshPages()">🔄 Atualizar</button>
+      <button class="btn" onclick="refreshAllData()">🔄 Atualizar</button>
     </div>
   </div>
 
@@ -262,17 +322,20 @@
     <!-- Coluna Esquerda: Relógio + Clima -->
     <div class="left-column">
       
+      <!-- Relógio Principal -->
       <div class="card clock-card">
         <div class="time" id="time">00:00</div>
         <div class="date" id="date">A carregar data...</div>
       </div>
 
+      <!-- Clima Porto -->
       <div class="card weather-card">
         <div class="card-title">
           <span>Clima (Porto)</span>
           <span style="font-size: 0.7rem; color: #30d158;">Open-Meteo</span>
         </div>
 
+        <!-- Tempo Hoje -->
         <div class="weather-section">
           <div class="weather-info">
             <span class="weather-label">Hoje</span>
@@ -286,6 +349,7 @@
 
         <div class="divider"></div>
 
+        <!-- Previsão Amanhã -->
         <div class="weather-section">
           <div class="weather-info">
             <span class="weather-label" style="color: #8e8e93;">Amanhã</span>
@@ -300,25 +364,37 @@
       </div>
     </div>
 
-    <!-- Coluna Direita: Iframes Lado a Lado -->
+    <!-- Coluna Direita: Autocarros Travel Porto -->
     <div class="right-column">
-      
-      <!-- Paragem FLUN2 -->
-      <div class="iframe-container">
-        <div class="iframe-header">
-          <span>FLUN2 (Norte)</span>
+      <div class="card stcp-card">
+        <div class="card-title">
+          <span>Próximos Autocarros</span>
+          <span style="color: #ff9f0a;">Travel Porto</span>
         </div>
-        <iframe id="frame-flun2" class="travel-frame" src="https://www.travel-porto.pt/stop/FLUN2"></iframe>
-      </div>
 
-      <!-- Paragem FLU1 -->
-      <div class="iframe-container">
-        <div class="iframe-header">
-          <span>FLU1 (Sul)</span>
+        <!-- Paragem 1: FLUN2 -->
+        <div class="bus-stop-block">
+          <div class="bus-stop-header">
+            <span>Paragem FLUN2</span>
+            <span style="font-size: 0.78rem; font-weight: normal; color: #8e8e93;">Fluvial (Norte)</span>
+          </div>
+          <div class="bus-list" id="stop-flun2-list">
+            <div class="status-msg">A consultar horários...</div>
+          </div>
         </div>
-        <iframe id="frame-flu1" class="travel-frame" src="https://www.travel-porto.pt/stop/FLU1"></iframe>
-      </div>
 
+        <!-- Paragem 2: FLU1 -->
+        <div class="bus-stop-block">
+          <div class="bus-stop-header">
+            <span>Paragem FLU1</span>
+            <span style="font-size: 0.78rem; font-weight: normal; color: #8e8e93;">Fluvial (Sul)</span>
+          </div>
+          <div class="bus-list" id="stop-flu1-list">
+            <div class="status-msg">A consultar horários...</div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
   </div>
@@ -351,6 +427,7 @@
 
       var options = { weekday: 'long', day: 'numeric', month: 'long' };
       var dateStr = now.toLocaleDateString('pt-PT', options);
+      
       dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
       document.getElementById('date').innerHTML = dateStr;
     }
@@ -375,7 +452,7 @@
       return ["Variável", cloudIcon];
     }
 
-    function refreshWeather() {
+    function fetchWeather() {
       var url = "https://api.open-meteo.com/v1/forecast?latitude=41.1579&longitude=-8.6291&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FLisbon";
       
       var xhr = new XMLHttpRequest();
@@ -384,6 +461,7 @@
         if (xhr.status >= 200 && xhr.status < 400) {
           try {
             var data = JSON.parse(xhr.responseText);
+            
             var currentTemp = Math.round(data.current_weather.temperature);
             var todayMax = Math.round(data.daily.temperature_2m_max[0]);
             var todayMin = Math.round(data.daily.temperature_2m_min[0]);
@@ -402,26 +480,118 @@
             document.getElementById('tomorrow-temp').innerHTML = tomorrowMin + "° / " + tomorrowMax + "°C";
             document.getElementById('tomorrow-desc').innerHTML = tomorrowInfo[0];
             document.getElementById('tomorrow-icon-container').innerHTML = tomorrowInfo[1];
-          } catch(e) {}
+
+          } catch(e) {
+            document.getElementById('today-desc').innerHTML = "Erro nos dados";
+          }
         }
       };
       xhr.send();
     }
 
-    function refreshPages() {
+    function parseTravelPortoHtml(html) {
+      var busList = [];
+
+      try {
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(html, "text/html");
+
+        // Pesquisa linhas nas tabelas do Travel Porto
+        var rows = doc.querySelectorAll('tr');
+        for (var i = 0; i < rows.length; i++) {
+          var cols = rows[i].querySelectorAll('td');
+          if (cols.length >= 2) {
+            var line = cols[0].textContent.trim();
+            var dest = cols.length >= 3 ? cols[1].textContent.trim() : 'STCP';
+            var time = cols[cols.length - 1].textContent.trim();
+
+            if (line && time && (/\d/.test(line) || /min|passar|hora/i.test(time))) {
+              busList.push({ line: line, dest: dest, time: time });
+            }
+          }
+        }
+      } catch(e) {}
+
+      // Regex de contingência se o DOM parser falhar
+      if (busList.length === 0) {
+        var regex = /([1-9]\d{0,2}[A-Z]?)\s*[\-\|]\s*([^<\n\-]+)?\s*[\-\|]\s*(\d+\s*min|a passar|à hora|\d{2}:\d{2})/gi;
+        var match;
+        while ((match = regex.exec(html)) !== null) {
+          busList.push({
+            line: match[1].trim(),
+            dest: match[2] ? match[2].trim() : 'STCP',
+            time: match[3].trim()
+          });
+        }
+      }
+
+      return busList;
+    }
+
+    function fetchBusStopData(stopCode, elementId) {
+      var targetUrl = 'https://www.travel-porto.pt/stop/' + stopCode;
+      
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", targetUrl, true);
+      xhr.timeout = 10000;
+
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+          var buses = parseTravelPortoHtml(xhr.responseText);
+
+          if (buses && buses.length > 0) {
+            var renderHtml = '';
+            var limit = Math.min(buses.length, 2); // Apresenta os próximos 2 autocarros
+            
+            for (var i = 0; i < limit; i++) {
+              renderHtml += '<div class="bus-row">' +
+                              '<div class="bus-left">' +
+                                '<span class="bus-line-badge">' + buses[i].line + '</span>' +
+                                '<span class="bus-dest">' + buses[i].dest + '</span>' +
+                              '</div>' +
+                              '<span class="bus-time-text">' + buses[i].time + '</span>' +
+                            '</div>';
+            }
+            document.getElementById(elementId).innerHTML = renderHtml;
+          } else {
+            document.getElementById(elementId).innerHTML = '<div class="status-msg">Sem autocarros previstos de momento</div>';
+          }
+        } else {
+          document.getElementById(elementId).innerHTML = '<div class="status-msg">Erro a consultar paragem</div>';
+        }
+      };
+
+      xhr.onerror = function() {
+        document.getElementById(elementId).innerHTML = '<div class="status-msg">Erro de ligação</div>';
+      };
+
+      xhr.ontimeout = function() {
+        document.getElementById(elementId).innerHTML = '<div class="status-msg">Tempo limite excedido</div>';
+      };
+
+      xhr.send();
+    }
+
+    function refreshAllData() {
       var now = new Date();
       var timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
       document.getElementById('last-update').innerHTML = 'Atualizado às ' + timeStr;
 
       fetchWeather();
-      
-      document.getElementById('frame-flun2').src = document.getElementById('frame-flun2').src;
-      document.getElementById('frame-flu1').src = document.getElementById('frame-flu1').src;
+      fetchBusStopData('FLUN2', 'stop-flun2-list');
+      fetchBusStopData('FLU1', 'stop-flu1-list');
     }
 
-    refreshWeather();
+    // Execução Inicial
+    refreshAllData();
 
-    setInterval(refreshPages, 120000);
+    // Timers de atualização automática
+    setInterval(function() {
+      fetchBusStopData('FLUN2', 'stop-flun2-list');
+      fetchBusStopData('FLU1', 'stop-flu1-list');
+    }, 30000); // Autocarros a cada 30 segundos
+
+    setInterval(fetchWeather, 30 * 60 * 1000); // Clima a cada 30 minutos
   </script>
 </body>
 </html>
