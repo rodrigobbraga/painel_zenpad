@@ -49,17 +49,23 @@
       margin-top: 8px;
     }
 
-    /* Grelha de Informação Secundária */
+    /* Estrutura Lado a Lado (Flexbox compatível com Android antigo) */
     .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 15px;
+      width: 100%;
       margin-bottom: 10px;
     }
     .card {
       background: #1c1c1e;
       padding: 20px;
       border-radius: 16px;
+      flex: 1;
+      -webkit-flex: 1;
+      min-width: 0; /* Previne transbordo de texto */
     }
     .card-title {
       font-size: 0.95rem;
@@ -110,7 +116,7 @@
     <div class="date" id="date">A carregar data...</div>
   </div>
 
-  <!-- Clima e Autocarros -->
+  <!-- Clima e Autocarros (Lado a Lado) -->
   <div class="grid">
     <!-- Bloco do Clima -->
     <div class="card">
