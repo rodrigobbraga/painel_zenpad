@@ -84,13 +84,14 @@
       width: 100%;
     }
 
+    /* Coluna Esquerda: Relógio + Clima */
     .left-column {
       display: -webkit-flex;
       display: flex;
       flex-direction: column;
       gap: 14px;
-      flex: 1.1;
-      -webkit-flex: 1.1;
+      flex: 1;
+      -webkit-flex: 1;
       min-width: 0;
       height: 100%;
     }
@@ -198,120 +199,60 @@
       margin: 8px 0;
     }
 
+    /* Coluna Direita: Iframes do Travel Porto */
     .right-column {
-      flex: 1.25;
-      -webkit-flex: 1.25;
+      flex: 1.3;
+      -webkit-flex: 1.3;
       min-width: 0;
       height: 100%;
-    }
-
-    .stcp-card {
-      height: 100%;
       display: -webkit-flex;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
+      gap: 14px;
+    }
+
+    .iframe-container {
+      flex: 1;
+      -webkit-flex: 1;
+      background: #1c1c1e;
+      border: 1px solid #2c2c2e;
+      border-radius: 18px;
+      padding: 12px;
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
 
-    .bus-stop-block {
-      background: #121214;
-      border: 1px solid #2c2c2e;
-      border-radius: 14px;
-      padding: 14px;
-      margin-top: 10px;
-      flex: 1;
-      -webkit-flex: 1;
-      display: -webkit-flex;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .bus-stop-header {
-      display: -webkit-flex;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .iframe-header {
+      font-size: 0.85rem;
       color: #ff9f0a;
       font-weight: 700;
-      font-size: 1rem;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #2c2c2e;
       margin-bottom: 8px;
-    }
-
-    .bus-list {
-      display: -webkit-flex;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex: 1;
-      -webkit-flex: 1;
-      justify-content: center;
-    }
-
-    .bus-row {
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       display: -webkit-flex;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #1c1c1e;
-      padding: 10px 12px;
+    }
+
+    .travel-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
       border-radius: 10px;
-      border: 1px solid #2c2c2e;
-    }
-
-    .bus-left {
-      display: -webkit-flex;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      overflow: hidden;
-    }
-
-    .bus-line-badge {
-      background: #ff9f0a;
-      color: #000000;
-      font-weight: 800;
-      padding: 4px 9px;
-      border-radius: 7px;
-      font-size: 0.95rem;
-      min-width: 48px;
-      text-align: center;
-    }
-
-    .bus-dest {
-      font-size: 0.9rem;
-      color: #e5e5ea;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 150px;
-    }
-
-    .bus-time-text {
-      color: #30d158;
-      font-weight: 700;
-      font-size: 1.05rem;
-      white-space: nowrap;
-    }
-
-    .status-msg {
-      color: #8e8e93;
-      font-size: 0.88rem;
-      text-align: center;
-      padding: 12px 0;
-      font-style: italic;
+      background: #ffffff; /* Fundo branco para legibilidade das páginas web */
     }
   </style>
 </head>
 <body>
 
   <div class="header-bar">
-    <div class="status-pill" id="last-update">A iniciar...</div>
+    <div class="status-pill" id="last-update">Painel Ativo</div>
     <div class="controls">
       <button class="btn" onclick="toggleFullscreen()">🖥️ Ecrã Inteiro</button>
-      <button class="btn" onclick="refreshAllData()">🔄 Atualizar</button>
+      <button class="btn" onclick="refreshPages()">🔄 Atualizar</button>
     </div>
   </div>
 
@@ -358,35 +299,25 @@
       </div>
     </div>
 
-    <!-- Coluna Direita: Autocarros Travel Porto com Múltiplos Proxies -->
+    <!-- Coluna Direita: Iframes com as paragens FLUN2 e FLU1 -->
     <div class="right-column">
-      <div class="card stcp-card">
-        <div class="card-title">
-          <span>Próximos Autocarros</span>
-          <span style="color: #ff9f0a;">Travel Porto</span>
+      
+      <!-- Paragem FLUN2 -->
+      <div class="iframe-container">
+        <div class="iframe-header">
+          <span>Paragem FLUN2 (Fluvial Norte)</span>
         </div>
-
-        <div class="bus-stop-block">
-          <div class="bus-stop-header">
-            <span>Paragem FLUN2</span>
-            <span style="font-size: 0.78rem; font-weight: normal; color: #8e8e93;">Fluvial (Norte)</span>
-          </div>
-          <div class="bus-list" id="stop-flun2-list">
-            <div class="status-msg">A consultar horários...</div>
-          </div>
-        </div>
-
-        <div class="bus-stop-block">
-          <div class="bus-stop-header">
-            <span>Paragem FLU1</span>
-            <span style="font-size: 0.78rem; font-weight: normal; color: #8e8e93;">Fluvial (Sul)</span>
-          </div>
-          <div class="bus-list" id="stop-flu1-list">
-            <div class="status-msg">A consultar horários...</div>
-          </div>
-        </div>
-
+        <iframe id="frame-flun2" class="travel-frame" src="https://www.travel-porto.pt/stop/FLUN2"></iframe>
       </div>
+
+      <!-- Paragem FLU1 -->
+      <div class="iframe-container">
+        <div class="iframe-header">
+          <span>Paragem FLU1 (Fluvial Sul)</span>
+        </div>
+        <iframe id="frame-flu1" class="travel-frame" src="https://www.travel-porto.pt/stop/FLU1"></iframe>
+      </div>
+
     </div>
 
   </div>
@@ -476,124 +407,22 @@
       xhr.send();
     }
 
-    function parseTravelPortoHtml(html) {
-      var busList = [];
-      try {
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(html, "text/html");
-        var rows = doc.querySelectorAll('tr');
-        for (var i = 0; i < rows.length; i++) {
-          var cols = rows[i].querySelectorAll('td');
-          if (cols.length >= 2) {
-            var line = cols[0].textContent.trim();
-            var dest = cols.length >= 3 ? cols[1].textContent.trim() : 'STCP';
-            var time = cols[cols.length - 1].textContent.trim();
-
-            if (line && time && (/\d/.test(line) || /min|passar|hora/i.test(time))) {
-              busList.push({ line: line, dest: dest, time: time });
-            }
-          }
-        }
-      } catch(e) {}
-
-      if (busList.length === 0) {
-        var regex = /([1-9]\d{0,2}[A-Z]?)\s*[\-\|]\s*([^<\n\-]+)?\s*[\-\|]\s*(\d+\s*min|a passar|à hora|\d{2}:\d{2})/gi;
-        var match;
-        while ((match = regex.exec(html)) !== null) {
-          busList.push({
-            line: match[1].trim(),
-            dest: match[2] ? match[2].trim() : 'STCP',
-            time: match[3].trim()
-          });
-        }
-      }
-      return busList;
-    }
-
-    function fetchBusStopData(stopCode, elementId) {
-      var targetUrl = 'https://www.travel-porto.pt/stop/' + stopCode;
-      
-      // Lista de proxies em rotação para evitar timeouts
-      var proxies = [
-        'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl),
-        'https://corsproxy.io/?' + encodeURIComponent(targetUrl),
-        'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl)
-      ];
-
-      function tryProxy(index) {
-        if (index >= proxies.length) {
-          document.getElementById(elementId).innerHTML = '<div class="status-msg">Sem autocarros previstos</div>';
-          return;
-        }
-
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", proxies[index], true);
-        xhr.timeout = 7000; // Timeout de 7 segundos por proxy
-
-        xhr.onload = function() {
-          if (xhr.status >= 200 && xhr.status < 400) {
-            var responseText = xhr.responseText;
-            try {
-              var json = JSON.parse(responseText);
-              if (json.contents) responseText = json.contents;
-            } catch(e) {}
-
-            var buses = parseTravelPortoHtml(responseText);
-
-            if (buses && buses.length > 0) {
-              var renderHtml = '';
-              var limit = Math.min(buses.length, 2);
-              
-              for (var i = 0; i < limit; i++) {
-                renderHtml += '<div class="bus-row">' +
-                                '<div class="bus-left">' +
-                                  '<span class="bus-line-badge">' + buses[i].line + '</span>' +
-                                  '<span class="bus-dest">' + buses[i].dest + '</span>' +
-                                '</div>' +
-                                '<span class="bus-time-text">' + buses[i].time + '</span>' +
-                              '</div>';
-              }
-              document.getElementById(elementId).innerHTML = renderHtml;
-            } else {
-              tryProxy(index + 1); // Tenta o próximo proxy se este falhou na leitura
-            }
-          } else {
-            tryProxy(index + 1);
-          }
-        };
-
-        xhr.onerror = function() {
-          tryProxy(index + 1);
-        };
-
-        xhr.ontimeout = function() {
-          tryProxy(index + 1); // Se demorar muito, salta logo para o próximo proxy
-        };
-
-        xhr.send();
-      }
-
-      tryProxy(0);
-    }
-
-    function refreshAllData() {
+    function refreshPages() {
       var now = new Date();
       var timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
       document.getElementById('last-update').innerHTML = 'Atualizado às ' + timeStr;
 
       fetchWeather();
-      fetchBusStopData('FLUN2', 'stop-flun2-list');
-      fetchBusStopData('FLU1', 'stop-flu1-list');
+      
+      // Recarrega os iframes para forçar a busca de novos horários
+      document.getElementById('frame-flun2').src = document.getElementById('frame-flun2').src;
+      document.getElementById('frame-flu1').src = document.getElementById('frame-flu1').src;
     }
 
-    refreshAllData();
+    refreshWeather();
 
-    setInterval(function() {
-      fetchBusStopData('FLUN2', 'stop-flun2-list');
-      fetchBusStopData('FLU1', 'stop-flu1-list');
-    }, 30000);
-
-    setInterval(fetchWeather, 30 * 60 * 1000);
+    // Atualiza o clima e os iframes automaticamente a cada 2 minutos
+    setInterval(refreshPages, 120000);
   </script>
 </body>
 </html>
