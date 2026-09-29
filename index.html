@@ -486,21 +486,21 @@
           <span style="color: #ff9f0a;">STCP • Tempo Real</span>
         </div>
 
-        <!-- FLUN2 -->
+        <!-- flun1 -->
         <div class="bus-stop-block">
           <div class="bus-stop-header">
-            <span>FLUN2</span>
+            <span>flun1</span>
             <span class="bus-stop-meta">Fluvial (Norte)</span>
           </div>
 
-          <div class="bus-list" id="stop-flun2-list">
+          <div class="bus-list" id="stop-flun1-list">
             <div class="status-msg">A consultar horários...</div>
           </div>
 
           <div class="bus-stop-footer">
-            <span class="bus-source" id="stop-flun2-status">STCP <strong>●</strong> a aguardar dados</span>
+            <span class="bus-source" id="stop-flun1-status">STCP <strong>●</strong> a aguardar dados</span>
             <a class="bus-official-link"
-               href="https://stcp.pt/pt/paragem?stop=FLUN2"
+               href="https://stcp.pt/pt/paragem?stop=flun1"
                target="_blank" rel="noopener">Abrir STCP ↗</a>
           </div>
         </div>
@@ -681,7 +681,7 @@
       No GitHub Pages a chamada direta a stcp.pt é bloqueada pelo CORS.
       Por isso esta versão usa o proxy público:
         https://stcp-proxy.onrender.com/?stop=FLU1
-        https://stcp-proxy.onrender.com/?stop=FLUN2
+        https://stcp-proxy.onrender.com/?stop=flun1
 
       O projeto do proxy publica Access-Control-Allow-Origin: *.
       Se mais tarde preferires ter controlo total, podes substituir
@@ -954,7 +954,7 @@
       document.getElementById('last-update').innerHTML = 'Atualizado às ' + timeStr;
 
       fetchWeather();
-      fetchBusStopData('FLUN2');
+      fetchBusStopData('flun1');
       fetchBusStopData('FLU1');
     }
 
@@ -962,7 +962,7 @@
 
     // Autocarros a cada minuto; clima a cada 30 minutos.
     setInterval(function() {
-      fetchBusStopData('FLUN2');
+      fetchBusStopData('flun1');
       fetchBusStopData('FLU1');
     }, BUS_REFRESH_MS);
 
