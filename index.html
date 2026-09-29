@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
 
-  <title>Painel ZenPad</title>
+  <title>Painel ZenPad - Porto</title>
   <style>
     * {
       box-sizing: border-box;
@@ -26,7 +26,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 25px;
+      padding: 20px;
       user-select: none;
       overflow: hidden;
     }
@@ -34,22 +34,22 @@
     /* Relógio Principal */
     .clock-container {
       text-align: center;
-      margin-top: 10px;
+      margin-top: 5px;
     }
     .time {
-      font-size: 6rem;
+      font-size: 5.8rem;
       font-weight: 200;
       letter-spacing: -2px;
       line-height: 1;
     }
     .date {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       color: #8e8e93;
       text-transform: capitalize;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
-    /* Estrutura Lado a Lado (Flexbox compatível com Android antigo) */
+    /* Estrutura Lado a Lado (Flexbox) */
     .grid {
       display: -webkit-flex;
       display: flex;
@@ -57,20 +57,20 @@
       justify-content: space-between;
       gap: 15px;
       width: 100%;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
     .card {
       background: #1c1c1e;
-      padding: 20px;
+      padding: 18px;
       border-radius: 16px;
       flex: 1;
       -webkit-flex: 1;
-      min-width: 0; /* Previne transbordo de texto */
+      min-width: 0;
     }
     .card-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: #8e8e93;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
       font-weight: 600;
@@ -78,33 +78,42 @@
 
     /* Clima */
     .weather-temp {
-      font-size: 2rem;
+      font-size: 1.8rem;
       font-weight: 300;
     }
     .weather-desc {
       color: #aeaeb2;
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       margin-top: 2px;
+      text-transform: capitalize;
     }
 
     /* Autocarros */
+    .bus-stop-title {
+      color: #0a84ff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-top: 6px;
+      margin-bottom: 4px;
+    }
     .bus-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
-      font-size: 1.1rem;
-    }
-    .bus-item:last-child {
-      margin-bottom: 0;
+      font-size: 1rem;
+      margin-bottom: 3px;
     }
     .bus-line {
       font-weight: 600;
-      color: #0a84ff;
+      color: #ffffff;
     }
     .bus-time {
       color: #30d158;
       font-weight: 500;
+    }
+    .loading-text {
+      color: #636366;
+      font-size: 0.85rem;
     }
   </style>
 </head>
@@ -116,39 +125,39 @@
     <div class="date" id="date">A carregar data...</div>
   </div>
 
-  <!-- Clima e Autocarros (Lado a Lado) -->
+  <!-- Clima e Autocarros -->
   <div class="grid">
-    <!-- Bloco do Clima -->
+    <!-- Bloco do Clima (Porto) -->
     <div class="card">
-      <div class="card-title">Clima</div>
+      <div class="card-title">Clima (Porto)</div>
       <div id="weather-today">
-        <div class="weather-temp">Hoje: --°C</div>
-        <div class="weather-desc">A carregar...</div>
+        <div class="weather-temp" id="today-temp">Hoje: --°C</div>
+        <div class="weather-desc" id="today-desc">A carregar...</div>
       </div>
-      <div id="weather-tomorrow" style="margin-top: 12px; border-top: 1px solid #2c2c2e; padding-top: 8px;">
-        <div class="weather-temp" style="font-size: 1.5rem;">Amanhã: --°C</div>
-        <div class="weather-desc">A carregar...</div>
+      <div id="weather-tomorrow" style="margin-top: 10px; border-top: 1px solid #2c2c2e; padding-top: 6px;">
+        <div class="weather-temp" id="tomorrow-temp" style="font-size: 1.35rem;">Amanhã: --°C</div>
+        <div class="weather-desc" id="tomorrow-desc">A carregar...</div>
       </div>
     </div>
 
-    <!-- Bloco dos Autocarros -->
+    <!-- Bloco dos Autocarros (STCP) -->
     <div class="card">
-      <div class="card-title">Próximos Autocarros</div>
-      <div id="bus-arrivals">
-        <div class="bus-item">
-          <span><span class="bus-line">Paragem 1</span></span>
-          <span class="bus-time">-- min</span>
-        </div>
-        <div class="bus-item">
-          <span><span class="bus-line">Paragem 2</span></span>
-          <span class="bus-time">-- min</span>
-        </div>
+      <div class="card-title">STCP - Fluvial</div>
+      
+      <div class="bus-stop-title">Paragem FLUN2</div>
+      <div id="bus-flun2">
+        <div class="loading-text">A consultar horários...</div>
+      </div>
+
+      <div class="bus-stop-title" style="margin-top: 8px;">Paragem FLU1</div>
+      <div id="bus-flu1">
+        <div class="loading-text">A consultar horários...</div>
       </div>
     </div>
   </div>
 
   <script>
-    // Atualizar Relógio e Data
+    // 1. Relógio e Data
     function updateClock() {
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
@@ -158,9 +167,121 @@
       const options = { weekday: 'long', day: 'numeric', month: 'long' };
       document.getElementById('date').textContent = now.toLocaleDateString('pt-PT', options);
     }
-    
     setInterval(updateClock, 1000);
     updateClock();
+
+    // Dicionário de Códigos de Tempo em Português
+    function getWeatherDescription(code) {
+      const codes = {
+        0: "Céu Limpo",
+        1: "Principalmente Limpo",
+        2: "Parcialmente Nublado",
+        3: "Nublado",
+        45: "Nevoeiro",
+        48: "Nevoeiro com Geada",
+        51: "Aresta/Chuvisco Leve",
+        53: "Chuvisco Moderado",
+        55: "Chuvisco Intenso",
+        61: "Chuva Fraca",
+        63: "Chuva Moderada",
+        65: "Chuva Forte",
+        80: "Aguaceiros Fracos",
+        81: "Aguaceiros Moderados",
+        82: "Aguaceiros Fortes",
+        95: "Trovoada"
+      };
+      return codes[code] || "Variável";
+    }
+
+    // 2. Clima em Tempo Real (Porto - Coordenadas: 41.1579, -8.6291)
+    function fetchWeather() {
+      const url = "https://api.open-meteo.com/v1/forecast?latitude=41.1579&longitude=-8.6291&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FLisbon";
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          // Hoje
+          const currentTemp = Math.round(data.current_weather.temperature);
+          const todayMax = Math.round(data.daily.temperature_2m_max[0]);
+          const todayMin = Math.round(data.daily.temperature_2m_min[0]);
+          const todayCode = data.current_weather.weathercode;
+
+          document.getElementById('today-temp').textContent = `Hoje: ${currentTemp}°C`;
+          document.getElementById('today-desc').textContent = `${getWeatherDescription(todayCode)} (${todayMin}° / ${todayMax}°)`;
+
+          // Amanhã
+          const tomorrowMax = Math.round(data.daily.temperature_2m_max[1]);
+          const tomorrowMin = Math.round(data.daily.temperature_2m_min[1]);
+          const tomorrowCode = data.daily.weathercode[1];
+
+          document.getElementById('tomorrow-temp').textContent = `Amanhã: ${tomorrowMin}° / ${tomorrowMax}°C`;
+          document.getElementById('tomorrow-desc').textContent = getWeatherDescription(tomorrowCode);
+        })
+        .catch(err => {
+          document.getElementById('today-desc').textContent = "Erro ao carregar clima";
+        });
+    }
+
+    // 3. Autocarros STCP (FLUN2 e FLU1)
+    function fetchBusStops() {
+      const stops = [
+        { code: 'FLUN2', elementId: 'bus-flun2' },
+        { code: 'FLU1', elementId: 'bus-flu1' }
+      ];
+
+      stops.forEach(stop => {
+        // Consulta o serviço da STCP via Proxy para evitar bloqueios de CORS
+        const targetUrl = `https://www.stcp.pt/itinerarios/estacao.php?p=${stop.code}`;
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+
+        fetch(proxyUrl)
+          .then(response => response.json())
+          .then(data => {
+            const container = document.getElementById(stop.elementId);
+            
+            // Procura os tempos de espera no HTML retornado
+            if (data.contents && data.contents.includes('linha-stcp')) {
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(data.contents, 'text/html');
+              const rows = doc.querySelectorAll('tr.linha-stcp');
+              
+              let html = '';
+              let count = 0;
+
+              rows.forEach(row => {
+                if (count < 2) { // Mostra os 2 próximos autocarros
+                  const line = row.querySelector('.linha') ? row.querySelector('.linha').textContent.trim() : '';
+                  const time = row.querySelector('.tempo') ? row.querySelector('.tempo').textContent.trim() : '';
+                  
+                  if (line && time) {
+                    html += `
+                      <div class="bus-item">
+                        <span class="bus-line">${line}</span>
+                        <span class="bus-time">${time}</span>
+                      </div>`;
+                    count++;
+                  }
+                }
+              });
+
+              container.innerHTML = html || '<div class="loading-text">Sem autocarros previstos</div>';
+            } else {
+              container.innerHTML = '<div class="loading-text">Sem autocarros de momento</div>';
+            }
+          })
+          .catch(() => {
+            document.getElementById(stop.elementId).innerHTML = '<div class="loading-text">A atualizar...</div>';
+          });
+      });
+    }
+
+    // Atualização Inicial e Periódica
+    fetchWeather();
+    fetchBusStops();
+
+    // Atualiza o clima a cada 30 minutos e os autocarros a cada 40 segundos
+    setInterval(fetchWeather, 30 * 60 * 1000);
+    setInterval(fetchBusStops, 40 * 1000);
   </script>
 </body>
 </html>
