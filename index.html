@@ -21,20 +21,17 @@
       color: #ffffff;
       font-family: sans-serif;
       height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 20px;
+      padding: 15px;
       user-select: none;
       overflow: hidden;
       position: relative;
     }
     
-    /* Controlo Superior */
+    /* Botões de Controlo Superior */
     .controls {
       position: absolute;
-      top: 15px;
-      right: 15px;
+      top: 10px;
+      left: 15px;
       display: flex;
       gap: 8px;
       z-index: 10;
@@ -44,8 +41,8 @@
       color: #8e8e93;
       border: 1px solid #2c2c2e;
       border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 0.85rem;
+      padding: 6px 10px;
+      font-size: 0.8rem;
       cursor: pointer;
       outline: none;
       -webkit-tap-highlight-color: transparent;
@@ -55,48 +52,72 @@
       color: #ffffff;
     }
 
-    /* Relógio */
+    /* Contentor de 2 Colunas */
+    .main-container {
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: row;
+      gap: 15px;
+      width: 100%;
+      height: 100%;
+      padding-top: 32px; /* Espaço para os botões do topo */
+    }
+
+    /* Coluna Esquerda: Relógio + Clima */
+    .left-column {
+      display: -webkit-flex;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex: 1;
+      -webkit-flex: 1;
+      min-width: 0;
+      height: 100%;
+    }
+
     .clock-container {
       text-align: center;
-      margin-top: 20px;
+      padding-top: 10px;
     }
     .time {
-      font-size: 5.5rem;
+      font-size: 5.2rem;
       font-weight: 300;
       letter-spacing: -2px;
       line-height: 1;
     }
     .date {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       color: #8e8e93;
       text-transform: capitalize;
-      margin-top: 6px;
+      margin-top: 8px;
     }
 
-    /* Grelha Lado a Lado */
-    .grid {
-      display: -webkit-flex;
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      gap: 15px;
-      width: 100%;
-      margin-bottom: 5px;
+    /* Coluna Direita: STCP em Altura Total */
+    .right-column {
+      flex: 1;
+      -webkit-flex: 1;
+      min-width: 0;
+      height: 100%;
     }
+
     .card {
       background: #1c1c1e;
       padding: 16px;
       border-radius: 16px;
-      flex: 1;
-      -webkit-flex: 1;
-      min-width: 0;
+      width: 100%;
+    }
+
+    .card-stcp {
+      height: 100%;
+      display: -webkit-flex;
       display: flex;
       flex-direction: column;
     }
+
     .card-title {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #8e8e93;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       text-transform: uppercase;
       letter-spacing: 1px;
       font-weight: bold;
@@ -112,11 +133,11 @@
     }
     .weather-desc {
       color: #aeaeb2;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       margin-top: 2px;
     }
 
-    /* Seletor de Paragem da STCP */
+    /* Seletor de Paragem STCP */
     .stop-selector {
       display: flex;
       gap: 6px;
@@ -136,57 +157,63 @@
       color: #ffffff;
     }
 
-    /* Janela Iframe STCP */
+    /* Frame STCP com flex:1 para ocupar toda a altura restante */
     .stcp-frame {
       width: 100%;
-      height: 210px;
+      flex: 1;
+      -webkit-flex: 1;
       border: none;
       border-radius: 10px;
       background: #ffffff;
-      margin-top: 5px;
+      margin-top: 6px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Botões de Controlo -->
+  <!-- Controlo Superior -->
   <div class="controls">
     <button class="btn" onclick="toggleFullscreen()">🖥️ Ecrã Inteiro</button>
     <button class="btn" onclick="window.location.reload()">🔄 Atualizar</button>
   </div>
 
-  <!-- Relógio e Data -->
-  <div class="clock-container">
-    <div class="time" id="time">00:00</div>
-    <div class="date" id="date">A carregar data...</div>
-  </div>
-
-  <!-- Clima e Autocarros Lado a Lado -->
-  <div class="grid">
-    <!-- Bloco do Clima -->
-    <div class="card">
-      <div class="card-title">Clima (Porto)</div>
-      <div id="weather-today">
-        <div class="weather-temp" id="today-temp">Hoje: --°C</div>
-        <div class="weather-desc" id="today-desc">A carregar...</div>
+  <!-- Contentor Principal -->
+  <div class="main-container">
+    
+    <!-- Coluna da Esquerda: Relógio + Clima -->
+    <div class="left-column">
+      <div class="clock-container">
+        <div class="time" id="time">00:00</div>
+        <div class="date" id="date">A carregar data...</div>
       </div>
-      <div id="weather-tomorrow" style="margin-top: 12px; border-top: 1px solid #2c2c2e; padding-top: 8px;">
-        <div class="weather-temp" id="tomorrow-temp" style="font-size: 1.35rem;">Amanhã: --°C</div>
-        <div class="weather-desc" id="tomorrow-desc">A carregar...</div>
-      </div>
-    </div>
 
-    <!-- Bloco da STCP com Janela Integrada -->
-    <div class="card">
-      <div class="card-title">
-        <span>STCP Fluvial</span>
-        <div class="stop-selector">
-          <button class="stop-btn active" id="btn-flun2" onclick="changeStop('FLUN2')">FLUN2</button>
-          <button class="stop-btn" id="btn-flu1" onclick="changeStop('FLU1')">FLU1</button>
+      <div class="card">
+        <div class="card-title">Clima (Porto)</div>
+        <div id="weather-today">
+          <div class="weather-temp" id="today-temp">Hoje: --°C</div>
+          <div class="weather-desc" id="today-desc">A carregar...</div>
+        </div>
+        <div id="weather-tomorrow" style="margin-top: 10px; border-top: 1px solid #2c2c2e; padding-top: 8px;">
+          <div class="weather-temp" id="tomorrow-temp" style="font-size: 1.35rem;">Amanhã: --°C</div>
+          <div class="weather-desc" id="tomorrow-desc">A carregar...</div>
         </div>
       </div>
-      <iframe id="stcp-iframe" class="stcp-frame" src="https://stcp.pt/pt/paragem?stop=FLUN2"></iframe>
     </div>
+
+    <!-- Coluna da Direita: STCP (Altura Completa) -->
+    <div class="right-column">
+      <div class="card card-stcp">
+        <div class="card-title">
+          <span>STCP Fluvial</span>
+          <div class="stop-selector">
+            <button class="stop-btn active" id="btn-flun2" onclick="changeStop('FLUN2')">FLUN2</button>
+            <button class="stop-btn" id="btn-flu1" onclick="changeStop('FLU1')">FLU1</button>
+          </div>
+        </div>
+        <iframe id="stcp-iframe" class="stcp-frame" src="https://stcp.pt/pt/paragem?stop=FLUN2"></iframe>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -213,7 +240,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Trocar Paragem na Janela STCP
+    // Alternar Paragem
     function changeStop(stopCode) {
       var iframe = document.getElementById('stcp-iframe');
       iframe.src = 'https://stcp.pt/pt/paragem?stop=' + stopCode;
@@ -222,7 +249,7 @@
       document.getElementById('btn-flu1').className = 'stop-btn' + (stopCode === 'FLU1' ? ' active' : '');
     }
 
-    // Dicionário de Tempo
+    // Tradução Meteorologia
     function getWeatherDescription(code) {
       var codes = {
         0: "Céu Limpo", 1: "Principalmente Limpo", 2: "Parcialmente Nublado", 3: "Nublado",
