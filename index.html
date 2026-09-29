@@ -52,7 +52,7 @@
       color: #ffffff;
     }
 
-    /* Contentor de 2 Colunas */
+    /* Contentor Principal de 2 Colunas */
     .main-container {
       display: -webkit-flex;
       display: flex;
@@ -60,7 +60,7 @@
       gap: 15px;
       width: 100%;
       height: 100%;
-      padding-top: 32px; /* Espaço para os botões do topo */
+      padding-top: 32px;
     }
 
     /* Coluna Esquerda: Relógio + Clima */
@@ -92,7 +92,7 @@
       margin-top: 8px;
     }
 
-    /* Coluna Direita: STCP em Altura Total */
+    /* Coluna Direita: STCP */
     .right-column {
       flex: 1;
       -webkit-flex: 1;
@@ -117,7 +117,7 @@
     .card-title {
       font-size: 0.85rem;
       color: #8e8e93;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
       text-transform: uppercase;
       letter-spacing: 1px;
       font-weight: bold;
@@ -137,35 +137,42 @@
       margin-top: 2px;
     }
 
-    /* Seletor de Paragem STCP */
-    .stop-selector {
-      display: flex;
-      gap: 6px;
+    /* Elementos de Autocarro Nativo */
+    .bus-stop-section {
+      margin-bottom: 15px;
     }
-    .stop-btn {
-      background: #2c2c2e;
+    .bus-stop-header {
       color: #0a84ff;
-      border: 1px solid #3a3a3c;
-      border-radius: 6px;
-      padding: 4px 8px;
-      font-size: 0.8rem;
       font-weight: bold;
-      cursor: pointer;
+      font-size: 1rem;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #2c2c2e;
+      padding-bottom: 4px;
     }
-    .stop-btn.active {
-      background: #0a84ff;
+    .bus-row {
+      display: -webkit-flex;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 1.1rem;
+    }
+    .bus-line-badge {
+      background: #2c2c2e;
       color: #ffffff;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.95rem;
     }
-
-    /* Frame STCP com flex:1 para ocupar toda a altura restante */
-    .stcp-frame {
-      width: 100%;
-      flex: 1;
-      -webkit-flex: 1;
-      border: none;
-      border-radius: 10px;
-      background: #ffffff;
-      margin-top: 6px;
+    .bus-time-text {
+      color: #30d158;
+      font-weight: bold;
+    }
+    .status-text {
+      color: #636366;
+      font-size: 0.88rem;
+      padding: 4px 0;
     }
   </style>
 </head>
@@ -180,7 +187,7 @@
   <!-- Contentor Principal -->
   <div class="main-container">
     
-    <!-- Coluna da Esquerda: Relógio + Clima -->
+    <!-- Coluna Esquerda: Relógio + Clima -->
     <div class="left-column">
       <div class="clock-container">
         <div class="time" id="time">00:00</div>
@@ -200,17 +207,27 @@
       </div>
     </div>
 
-    <!-- Coluna da Direita: STCP (Altura Completa) -->
+    <!-- Coluna Direita: STCP Nativo (Sem Iframe) -->
     <div class="right-column">
       <div class="card card-stcp">
-        <div class="card-title">
-          <span>STCP Fluvial</span>
-          <div class="stop-selector">
-            <button class="stop-btn active" id="btn-flun2" onclick="changeStop('FLUN2')">FLUN2</button>
-            <button class="stop-btn" id="btn-flu1" onclick="changeStop('FLU1')">FLU1</button>
+        <div class="card-title">STCP - Fluvial</div>
+        
+        <!-- Paragem FLUN2 -->
+        <div class="bus-stop-section">
+          <div class="bus-stop-header">Paragem FLUN2</div>
+          <div id="stop-flun2-list">
+            <div class="status-text">A consultar horários...</div>
           </div>
         </div>
-        <iframe id="stcp-iframe" class="stcp-frame" src="https://stcp.pt/pt/paragem?stop=FLUN2"></iframe>
+
+        <!-- Paragem FLU1 -->
+        <div class="bus-stop-section" style="margin-top: 10px;">
+          <div class="bus-stop-header">Paragem FLU1</div>
+          <div id="stop-flu1-list">
+            <div class="status-text">A consultar horários...</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -240,16 +257,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Alternar Paragem
-    function changeStop(stopCode) {
-      var iframe = document.getElementById('stcp-iframe');
-      iframe.src = 'https://stcp.pt/pt/paragem?stop=' + stopCode;
-      
-      document.getElementById('btn-flun2').className = 'stop-btn' + (stopCode === 'FLUN2' ? ' active' : '');
-      document.getElementById('btn-flu1').className = 'stop-btn' + (stopCode === 'FLU1' ? ' active' : '');
-    }
-
-    // Tradução Meteorologia
+    // Weather
     function getWeatherDescription(code) {
       var codes = {
         0: "Céu Limpo", 1: "Principalmente Limpo", 2: "Parcialmente Nublado", 3: "Nublado",
@@ -260,7 +268,6 @@
       return codes[code] || "Variável";
     }
 
-    // Clima via HTTPS
     function fetchWeather() {
       var url = "https://api.open-meteo.com/v1/forecast?latitude=41.1579&longitude=-8.6291&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FLisbon";
       var xhr = new XMLHttpRequest();
@@ -292,8 +299,65 @@
       xhr.send();
     }
 
+    // Consulta de Autocarros STCP em JSON nativo
+    function fetchBusStopData(stopCode, elementId) {
+      // Endpoint de consulta direta de chegadas em tempo real
+      var apiUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://stcp.pt/pt/paragem?stop=' + stopCode);
+      var xhr = new XMLHttpRequest();
+
+      xhr.open("GET", apiUrl, true);
+      xhr.onload = function() {
+        var container = document.getElementById(elementId);
+        if (xhr.status >= 200 && xhr.status < 400) {
+          try {
+            var response = JSON.parse(xhr.responseText);
+            var htmlContent = response.contents || '';
+            
+            // Procura números de linhas e tempos no texto extraído
+            var busMatches = htmlContent.match(/(\d{3}[A-Z]?)\s*-\s*([\d\w\s]+?)\s*-\s*(\d+\s*min|a passar|à hora)/gi);
+            
+            if (busMatches && busMatches.length > 0) {
+              var renderHtml = '';
+              var limit = Math.min(busMatches.length, 3); // Mostra até 3 autocarros por paragem
+              
+              for (var i = 0; i < limit; i++) {
+                var parts = busMatches[i].split('-');
+                var line = parts[0] ? parts[0].trim() : 'STCP';
+                var time = parts[parts.length - 1] ? parts[parts.length - 1].trim() : '';
+
+                renderHtml += '<div class="bus-row">' +
+                                '<span class="bus-line-badge">Linha ' + line + '</span>' +
+                                '<span class="bus-time-text">' + time + '</span>' +
+                              '</div>';
+              }
+              container.innerHTML = renderHtml;
+            } else {
+              container.innerHTML = '<div class="status-text">Sem autocarros previstos nos próximos minutos</div>';
+            }
+          } catch(e) {
+            container.innerHTML = '<div class="status-text">A atualizar horários...</div>';
+          }
+        } else {
+          container.innerHTML = '<div class="status-text">Serviço indisponível</div>';
+        }
+      };
+      xhr.onerror = function() {
+        document.getElementById(elementId).innerHTML = '<div class="status-text">Sem ligação</div>';
+      };
+      xhr.send();
+    }
+
+    function updateAllBuses() {
+      fetchBusStopData('FLUN2', 'stop-flun2-list');
+      fetchBusStopData('FLU1', 'stop-flu1-list');
+    }
+
+    // Execução Inicial e Intervalos
     fetchWeather();
+    updateAllBuses();
+
     setInterval(fetchWeather, 30 * 60 * 1000);
+    setInterval(updateAllBuses, 35 * 1000); // Atualiza os autocarros a cada 35 segundos
   </script>
 </body>
 </html>
