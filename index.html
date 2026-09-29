@@ -612,16 +612,17 @@
       O projecto Travel Porto usa este endpoint STCP no seu backend
       para alimentar a sua própria API.
 
-      No GitHub Pages tentamos primeiro chamar diretamente a STCP.
-      Se o navegador bloquear a chamada por CORS, usa o pequeno
-      Cloudflare Worker "stcp-proxy-worker.js" que acompanha esta
-      versão e configura a variável BUS_PROXY_URL abaixo.
+      No GitHub Pages a chamada direta a stcp.pt é bloqueada pelo CORS.
+      Por isso esta versão usa o proxy público:
+        https://stcp-proxy.onrender.com/?stop=FLU1
+        https://stcp-proxy.onrender.com/?stop=FLUN2
 
-      Exemplo:
-        var BUS_PROXY_URL = "https://meu-worker.workers.dev";
+      O projeto do proxy publica Access-Control-Allow-Origin: *.
+      Se mais tarde preferires ter controlo total, podes substituir
+      BUS_PROXY_URL pelo teu próprio proxy.
     */
 
-    var BUS_PROXY_URL = "";
+    var BUS_PROXY_URL = "https://stcp-proxy.onrender.com";
     var BUS_REFRESH_MS = 60000;
 
     function escapeHtml(value) {
@@ -651,10 +652,8 @@
     }
 
     function buildBusUrl(stopCode) {
-      if (BUS_PROXY_URL) {
-        return BUS_PROXY_URL.replace(/\/+$/, "") + "/stcp/" + encodeURIComponent(stopCode) + "/realtime";
-      }
-      return "https://stcp.pt/api/stops/" + encodeURIComponent(stopCode) + "/realtime";
+      // Public proxy: GET /?stop={id}
+      return BUS_PROXY_URL.replace(/\/+$/, "") + "/?stop=" + encodeURIComponent(stopCode);
     }
 
     function renderBusStatus(stopCode, text) {
@@ -669,7 +668,17 @@
       var id = stopCode.toLowerCase();
       var list = document.getElementById('stop-' + id + '-list');
 
-      var arrivals = Array.isArray(data && data.arrivals) ? data.arrivals.slice() : [];
+      var arrivals = [];
+
+      if (Array.isArray(data)) {
+        arrivals = data.slice();
+      } else if (Array.isArray(data && data.arrivals)) {
+        arrivals = data.arrivals.slice();
+      } else if (data && data.data && Array.isArray(data.data.arrivals)) {
+        arrivals = data.data.arrivals.slice();
+      } else if (data && data.data && Array.isArray(data.data)) {
+        arrivals = data.data.slice();
+      }
 
       arrivals.sort(function(a, b) {
         var am = Number(a.arrival_minutes);
@@ -690,9 +699,10 @@
       var rows = '';
 
       arrivals.forEach(function(bus) {
-        var route = bus.trip_id ? String(bus.trip_id).split('_')[0] : '—';
-        var destination = bus.trip_headsign || 'Destino não indicado';
-        var mins = bus.arrival_minutes;
+        var rawRoute = bus.route_short_name || bus.route_id || bus.line || (bus.trip_id ? String(bus.trip_id).split('_')[0] : '—');
+        var route = String(rawRoute || '—');
+        var destination = bus.trip_headsign || bus.destination || bus.headsign || 'Destino não indicado';
+        var mins = bus.arrival_minutes ?? bus.minutes ?? bus.in_minutes;
         var clockTime = formatArrivalTime(bus.estimated_arrival_time);
 
         var delay = Number(bus.delay_minutes);
@@ -795,3 +805,4 @@
   </script>
 </body>
 </html>
+
