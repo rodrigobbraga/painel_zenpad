@@ -68,7 +68,6 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: background 0.2s ease, color 0.2s ease;
     }
 
     .btn:active {
@@ -85,7 +84,6 @@
       width: 100%;
     }
 
-    /* Coluna Esquerda: Relógio + Clima */
     .left-column {
       display: -webkit-flex;
       display: flex;
@@ -322,20 +320,17 @@
     <!-- Coluna Esquerda: Relógio + Clima -->
     <div class="left-column">
       
-      <!-- Relógio Principal -->
       <div class="card clock-card">
         <div class="time" id="time">00:00</div>
         <div class="date" id="date">A carregar data...</div>
       </div>
 
-      <!-- Clima Porto -->
       <div class="card weather-card">
         <div class="card-title">
           <span>Clima (Porto)</span>
           <span style="font-size: 0.7rem; color: #30d158;">Open-Meteo</span>
         </div>
 
-        <!-- Tempo Hoje -->
         <div class="weather-section">
           <div class="weather-info">
             <span class="weather-label">Hoje</span>
@@ -349,7 +344,6 @@
 
         <div class="divider"></div>
 
-        <!-- Previsão Amanhã -->
         <div class="weather-section">
           <div class="weather-info">
             <span class="weather-label" style="color: #8e8e93;">Amanhã</span>
@@ -364,7 +358,7 @@
       </div>
     </div>
 
-    <!-- Coluna Direita: Autocarros Travel Porto -->
+    <!-- Coluna Direita: Autocarros Travel Porto via Proxy CORS -->
     <div class="right-column">
       <div class="card stcp-card">
         <div class="card-title">
@@ -372,7 +366,6 @@
           <span style="color: #ff9f0a;">Travel Porto</span>
         </div>
 
-        <!-- Paragem 1: FLUN2 -->
         <div class="bus-stop-block">
           <div class="bus-stop-header">
             <span>Paragem FLUN2</span>
@@ -383,7 +376,6 @@
           </div>
         </div>
 
-        <!-- Paragem 2: FLU1 -->
         <div class="bus-stop-block">
           <div class="bus-stop-header">
             <span>Paragem FLU1</span>
@@ -427,7 +419,6 @@
 
       var options = { weekday: 'long', day: 'numeric', month: 'long' };
       var dateStr = now.toLocaleDateString('pt-PT', options);
-      
       dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
       document.getElementById('date').innerHTML = dateStr;
     }
@@ -461,7 +452,6 @@
         if (xhr.status >= 200 && xhr.status < 400) {
           try {
             var data = JSON.parse(xhr.responseText);
-            
             var currentTemp = Math.round(data.current_weather.temperature);
             var todayMax = Math.round(data.daily.temperature_2m_max[0]);
             var todayMin = Math.round(data.daily.temperature_2m_min[0]);
@@ -480,10 +470,7 @@
             document.getElementById('tomorrow-temp').innerHTML = tomorrowMin + "° / " + tomorrowMax + "°C";
             document.getElementById('tomorrow-desc').innerHTML = tomorrowInfo[0];
             document.getElementById('tomorrow-icon-container').innerHTML = tomorrowInfo[1];
-
-          } catch(e) {
-            document.getElementById('today-desc').innerHTML = "Erro nos dados";
-          }
+          } catch(e) {}
         }
       };
       xhr.send();
@@ -491,12 +478,9 @@
 
     function parseTravelPortoHtml(html) {
       var busList = [];
-
       try {
         var parser = new DOMParser();
         var doc = parser.parseFromString(html, "text/html");
-
-        // Pesquisa linhas nas tabelas do Travel Porto
         var rows = doc.querySelectorAll('tr');
         for (var i = 0; i < rows.length; i++) {
           var cols = rows[i].querySelectorAll('td');
@@ -512,7 +496,6 @@
         }
       } catch(e) {}
 
-      // Regex de contingência se o DOM parser falhar
       if (busList.length === 0) {
         var regex = /([1-9]\d{0,2}[A-Z]?)\s*[\-\|]\s*([^<\n\-]+)?\s*[\-\|]\s*(\d+\s*min|a passar|à hora|\d{2}:\d{2})/gi;
         var match;
@@ -524,24 +507,31 @@
           });
         }
       }
-
       return busList;
     }
 
     function fetchBusStopData(stopCode, elementId) {
       var targetUrl = 'https://www.travel-porto.pt/stop/' + stopCode;
+      // Usamos o proxy CORS leve para ultrapassar o bloqueio de origem do navegador
+      var proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl);
       
       var xhr = new XMLHttpRequest();
-      xhr.open("GET", targetUrl, true);
+      xhr.open("GET", proxyUrl, true);
       xhr.timeout = 10000;
 
       xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 400) {
-          var buses = parseTravelPortoHtml(xhr.responseText);
+          var responseText = xhr.responseText;
+          try {
+            var json = JSON.parse(responseText);
+            if (json.contents) responseText = json.contents;
+          } catch(e) {}
+
+          var buses = parseTravelPortoHtml(responseText);
 
           if (buses && buses.length > 0) {
             var renderHtml = '';
-            var limit = Math.min(buses.length, 2); // Apresenta os próximos 2 autocarros
+            var limit = Math.min(buses.length, 2);
             
             for (var i = 0; i < limit; i++) {
               renderHtml += '<div class="bus-row">' +
@@ -554,7 +544,7 @@
             }
             document.getElementById(elementId).innerHTML = renderHtml;
           } else {
-            document.getElementById(elementId).innerHTML = '<div class="status-msg">Sem autocarros previstos de momento</div>';
+            document.getElementById(elementId).innerHTML = '<div class="status-msg">Sem autocarros previstos</div>';
           }
         } else {
           document.getElementById(elementId).innerHTML = '<div class="status-msg">Erro a consultar paragem</div>';
@@ -582,16 +572,14 @@
       fetchBusStopData('FLU1', 'stop-flu1-list');
     }
 
-    // Execução Inicial
     refreshAllData();
 
-    // Timers de atualização automática
     setInterval(function() {
       fetchBusStopData('FLUN2', 'stop-flun2-list');
       fetchBusStopData('FLU1', 'stop-flu1-list');
-    }, 30000); // Autocarros a cada 30 segundos
+    }, 30000);
 
-    setInterval(fetchWeather, 30 * 60 * 1000); // Clima a cada 30 minutos
+    setInterval(fetchWeather, 30 * 60 * 1000);
   </script>
 </body>
 </html>
