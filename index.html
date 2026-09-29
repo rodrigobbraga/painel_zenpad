@@ -27,12 +27,33 @@
       padding: 25px;
       user-select: none;
       overflow: hidden;
+      position: relative;
     }
     
+    /* Botão de Atualizar */
+    .refresh-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #1c1c1e;
+      color: #8e8e93;
+      border: 1px solid #2c2c2e;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .refresh-btn:active {
+      background: #2c2c2e;
+      color: #ffffff;
+    }
+
     /* Relógio */
     .clock-container {
       text-align: center;
-      margin-top: 10px;
+      margin-top: 15px;
     }
     .time {
       font-size: 6rem;
@@ -75,6 +96,9 @@
   </style>
 </head>
 <body>
+
+  <!-- Botão de Atualizar -->
+  <button class="refresh-btn" onclick="window.location.reload();">🔄 Atualizar</button>
 
   <!-- Relógio e Data -->
   <div class="clock-container">
@@ -120,7 +144,7 @@
       return codes[code] || "Variável";
     }
 
-    // Clima via XMLHttpRequest (compatibilidade 100% garantida)
+    // Clima via XMLHttpRequest (compatibilidade 100%)
     function fetchWeather() {
       var url = "https://api.open-meteo.com/v1/forecast?latitude=41.1579&longitude=-8.6291&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FLisbon";
       var xhr = new XMLHttpRequest();
@@ -156,7 +180,7 @@
     }
 
     fetchWeather();
-    setInterval(fetchWeather, 30 * 60 * 1000); // Atualiza a cada 30 min
+    setInterval(fetchWeather, 30 * 60 * 1000);
   </script>
 </body>
 </html>
